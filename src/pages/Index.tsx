@@ -1,14 +1,29 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import HowItWorks from "@/components/HowItWorks";
 import AudioUpload from "@/components/AudioUpload";
+import LocationInput from "@/components/LocationInput";
 import SpeciesResults, { type Detection } from "@/components/SpeciesResults";
 import TEKAnnotationModal from "@/components/TEKAnnotationModal";
-import SeasonalDashboard from "@/components/SeasonalDashboard";
+import DetectionTimeline from "@/components/DetectionTimeline";
 import ExportPanel from "@/components/ExportPanel";
 
-const MOCK_DETECTIONS: Detection[] = [
+// Wikipedia thumbnail helper — fetches species image via Wikimedia API
+async function fetchSpeciesThumbnail(commonName: string): Promise<string | undefined> {
+  try {
+    const res = await fetch(
+      `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(commonName)}`
+    );
+    if (!res.ok) return undefined;
+    const data = await res.json();
+    return data.thumbnail?.source;
+  } catch {
+    return undefined;
+  }
+}
+
+const MOCK_DETECTIONS: Omit<Detection, "thumbnailUrl">[] = [
   {
     id: "1",
     species: "Tockus flavirostris",
@@ -59,23 +74,33 @@ const MOCK_DETECTIONS: Detection[] = [
 const Index = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [detections, setDetections] = useState<Detection[]>([]);
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
   const [tekModal, setTekModal] = useState<{ open: boolean; detectionId: string }>({
     open: false,
     detectionId: "",
   });
-  const uploadRef = useRef<HTMLDivElement>(null);
 
   const handleGetStarted = () => {
     document.getElementById("upload")?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleAnalyze = useCallback((_file: File) => {
+  const handleAnalyze = useCallback(async (_file: File) => {
     setIsAnalyzing(true);
-    // Simulate BirdNET analysis
-    setTimeout(() => {
-      setDetections(MOCK_DETECTIONS);
-      setIsAnalyzing(false);
-    }, 2500);
+    // Simulate BirdNET analysis — replace with real API call
+    await new Promise((r) => setTimeout(r, 2500));
+
+    // Fetch real species thumbnails from Wikipedia
+    const withThumbs = await Promise.all(
+      MOCK_DETECTIONS.map(async (d) => ({
+        ...d,
+        thumbnailUrl: await fetchSpeciesThumbnail(d.commonName),
+      }))
+    );
+
+    setDetections(withThumbs);
+    setIsAnalyzing(false);
   }, []);
 
   const handleAnnotate = (id: string) => {
@@ -100,12 +125,30 @@ const Index = () => {
       <Navbar />
       <HeroSection onGetStarted={handleGetStarted} />
       <HowItWorks />
-      <div ref={uploadRef}>
-        <AudioUpload onAnalyze={handleAnalyze} isAnalyzing={isAnalyzing} />
-      </div>
+
+      <AudioUpload
+        onAnalyze={handleAnalyze}
+        isAnalyzing={isAnalyzing}
+        file={audioFile}
+        onFileChange={setAudioFile}
+      />
+
+      {audioFile && (
+        <div className="container max-w-3xl mx-auto px-6 -mt-12 mb-12">
+          <LocationInput
+            latitude={latitude}
+            longitude={longitude}
+            onLocationChange={(lat, lon) => {
+              setLatitude(lat);
+              setLongitude(lon);
+            }}
+          />
+        </div>
+      )}
+
       <SpeciesResults detections={detections} onAnnotate={handleAnnotate} />
-      <SeasonalDashboard detections={detections} />
-      <ExportPanel detections={detections} />
+      <DetectionTimeline detections={detections} />
+      <ExportPanel detections={detections} latitude={latitude} longitude={longitude} />
 
       <TEKAnnotationModal
         isOpen={tekModal.open}
@@ -114,7 +157,6 @@ const Index = () => {
         onSave={handleSaveTEK}
       />
 
-      {/* Footer */}
       <footer className="py-12 border-t border-border">
         <div className="container max-w-6xl mx-auto px-6 text-center">
           <p className="text-sm font-body text-muted-foreground">

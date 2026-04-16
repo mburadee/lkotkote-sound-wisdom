@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
-import { Bird, Clock, MapPin, Percent } from "lucide-react";
-import hornbillImg from "@/assets/hornbill.jpg";
+import { Clock, MapPin, Percent } from "lucide-react";
 
 export interface Detection {
   id: string;
@@ -11,6 +10,7 @@ export interface Detection {
   endTime: number;
   location?: string;
   tekAnnotation?: string;
+  thumbnailUrl?: string;
 }
 
 interface Props {
@@ -48,14 +48,20 @@ const SpeciesResults = ({ detections, onAnnotate }: Props) => {
               transition={{ delay: i * 0.1 }}
               className="bg-card rounded-2xl p-6 shadow-card flex flex-col sm:flex-row items-start sm:items-center gap-5"
             >
-              <img
-                src={hornbillImg}
-                alt={d.commonName}
-                className="w-16 h-16 rounded-xl object-cover flex-shrink-0"
-                loading="lazy"
-                width={64}
-                height={64}
-              />
+              {d.thumbnailUrl ? (
+                <img
+                  src={d.thumbnailUrl}
+                  alt={d.commonName}
+                  className="w-16 h-16 rounded-xl object-cover flex-shrink-0"
+                  loading="lazy"
+                  width={64}
+                  height={64}
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center flex-shrink-0 text-2xl">
+                  🐦
+                </div>
+              )}
 
               <div className="flex-1 min-w-0">
                 <h3 className="font-display font-semibold text-lg text-foreground">
