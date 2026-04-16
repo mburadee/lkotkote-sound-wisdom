@@ -1,13 +1,24 @@
 import { motion } from "framer-motion";
 import { Download, Globe, FileSpreadsheet, FileText } from "lucide-react";
+import { toast } from "sonner";
 import type { Detection } from "./SpeciesResults";
+import { exportDarwinCore, exportCSV, exportJSON } from "@/lib/darwin-core-export";
 
 interface Props {
   detections: Detection[];
+  latitude?: string;
+  longitude?: string;
 }
 
-const ExportPanel = ({ detections }: Props) => {
+const ExportPanel = ({ detections, latitude, longitude }: Props) => {
   if (detections.length === 0) return null;
+
+  const exportOptions = {
+    detections,
+    latitude,
+    longitude,
+    recordedDate: new Date().toISOString().split("T")[0],
+  };
 
   const formats = [
     {
@@ -15,18 +26,30 @@ const ExportPanel = ({ detections }: Props) => {
       title: "Darwin Core Archive",
       desc: "Standard format for GBIF publishing",
       ext: "DwC-A",
+      action: async () => {
+        await exportDarwinCore(exportOptions);
+        toast.success("Darwin Core Archive exported!");
+      },
     },
     {
       icon: FileSpreadsheet,
       title: "CSV Spreadsheet",
       desc: "For analysis in Excel or R",
       ext: "CSV",
+      action: () => {
+        exportCSV(exportOptions);
+        toast.success("CSV exported!");
+      },
     },
     {
       icon: FileText,
       title: "JSON Report",
       desc: "Machine-readable with full metadata",
       ext: "JSON",
+      action: () => {
+        exportJSON(exportOptions);
+        toast.success("JSON exported!");
+      },
     },
   ];
 
@@ -55,6 +78,7 @@ const ExportPanel = ({ detections }: Props) => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
+              onClick={f.action}
               className="bg-card rounded-2xl p-6 shadow-card text-left hover:shadow-warm transition-shadow group"
             >
               <div className="flex items-center justify-between mb-4">
