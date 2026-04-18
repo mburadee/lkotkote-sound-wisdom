@@ -65,7 +65,8 @@ Deno.serve(async (req) => {
     upstreamForm.append("sensitivity", "1.0");
     upstreamForm.append("overlap", "0.0");
 
-    const base = BIRDNET_SERVER_URL.replace(/\/$/, "");
+    let base = BIRDNET_SERVER_URL.replace(/\/$/, "");
+    if (!/^https?:\/\//i.test(base)) base = `https://${base}`;
     const upstreamRes = await fetch(`${base}/analyze`, {
       method: "POST",
       body: upstreamForm,
