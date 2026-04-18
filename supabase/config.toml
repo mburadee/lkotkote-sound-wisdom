@@ -1,1 +1,4 @@
 project_id = "owdrikejsrkwyembntdp"
+
+[functions.birdnet-analyze]
+verify_jwt = false
