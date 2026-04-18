@@ -1,7 +1,8 @@
 import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Upload, Mic, X, Loader2 } from "lucide-react";
+import { Upload, Mic, Loader2 } from "lucide-react";
 import AudioPlayer from "./AudioPlayer";
+import AudioRecorder from "./AudioRecorder";
 
 interface AudioUploadProps {
   onAnalyze: (file: File) => void;
@@ -121,6 +122,17 @@ const AudioUpload = ({ onAnalyze, isAnalyzing, file, onFileChange }: AudioUpload
             </motion.div>
           )}
         </AnimatePresence>
+
+        {!file && (
+          <div className="mt-6 flex flex-col items-center">
+            <div className="flex items-center gap-3 mb-3 w-full max-w-xs">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-xs font-body text-muted-foreground uppercase tracking-wider">or</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+            <AudioRecorder onRecorded={onFileChange} />
+          </div>
+        )}
       </div>
     </section>
   );
