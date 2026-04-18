@@ -1,4 +1,6 @@
 import { useState, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import HowItWorks from "@/components/HowItWorks";
@@ -86,22 +88,55 @@ const Index = () => {
     document.getElementById("upload")?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleAnalyze = useCallback(async (_file: File) => {
-    setIsAnalyzing(true);
-    // Simulate BirdNET analysis — replace with real API call
-    await new Promise((r) => setTimeout(r, 2500));
+  const handleAnalyze = useCallback(
+    async (file: File) => {
+      setIsAnalyzing(true);
+      try {
+        const formData = new FormData();
+        formData.append("audio", file);
+        if (latitude) formData.append("lat", latitude);
+        if (longitude) formData.append("lon", longitude);
+        formData.append("min_conf", "0.5");
 
-    // Fetch real species thumbnails from Wikipedia
-    const withThumbs = await Promise.all(
-      MOCK_DETECTIONS.map(async (d) => ({
-        ...d,
-        thumbnailUrl: await fetchSpeciesThumbnail(d.commonName),
-      }))
-    );
+        const { data, error } = await supabase.functions.invoke("birdnet-analyze", {
+          body: formData,
+        });
 
-    setDetections(withThumbs);
-    setIsAnalyzing(false);
-  }, []);
+        if (error) throw error;
+
+        const raw = (data?.detections ?? []) as Array<{
+          id: string;
+          species: string;
+          commonName: string;
+          confidence: number;
+          startTime: number;
+          endTime: number;
+        }>;
+
+        if (raw.length === 0) {
+          toast.info("No species detected with confidence above threshold.");
+        }
+
+        const withThumbs: Detection[] = await Promise.all(
+          raw.map(async (d) => ({
+            ...d,
+            location: latitude && longitude ? `${latitude}, ${longitude}` : undefined,
+            thumbnailUrl: await fetchSpeciesThumbnail(d.commonName),
+          })),
+        );
+
+        setDetections(withThumbs);
+      } catch (err) {
+        console.error("BirdNET analysis failed:", err);
+        toast.error(
+          err instanceof Error ? err.message : "Failed to analyze recording. Check BirdNET server.",
+        );
+      } finally {
+        setIsAnalyzing(false);
+      }
+    },
+    [latitude, longitude],
+  );
 
   const handleAnnotate = (id: string) => {
     setTekModal({ open: true, detectionId: id });
