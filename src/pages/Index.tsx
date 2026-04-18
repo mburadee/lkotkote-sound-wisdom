@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
@@ -10,6 +10,7 @@ import SpeciesResults, { type Detection } from "@/components/SpeciesResults";
 import TEKAnnotationModal from "@/components/TEKAnnotationModal";
 import DetectionTimeline from "@/components/DetectionTimeline";
 import ExportPanel from "@/components/ExportPanel";
+import StepperNav, { type StepKey } from "@/components/StepperNav";
 
 // Wikipedia thumbnail helper — fetches species image via Wikimedia API
 async function fetchSpeciesThumbnail(commonName: string): Promise<string | undefined> {
@@ -25,53 +26,12 @@ async function fetchSpeciesThumbnail(commonName: string): Promise<string | undef
   }
 }
 
-const MOCK_DETECTIONS: Omit<Detection, "thumbnailUrl">[] = [
-  {
-    id: "1",
-    species: "Tockus flavirostris",
-    commonName: "Eastern Yellow-billed Hornbill",
-    confidence: 0.94,
-    startTime: 2.3,
-    endTime: 5.8,
-    location: "Samburu County",
-  },
-  {
-    id: "2",
-    species: "Turdoides jardineii",
-    commonName: "Arrow-marked Babbler",
-    confidence: 0.87,
-    startTime: 8.1,
-    endTime: 12.4,
-    location: "Samburu County",
-  },
-  {
-    id: "3",
-    species: "Bubalornis niger",
-    commonName: "Red-billed Buffalo Weaver",
-    confidence: 0.82,
-    startTime: 15.0,
-    endTime: 18.3,
-    location: "Samburu County",
-  },
-  {
-    id: "4",
-    species: "Lamprotornis superbus",
-    commonName: "Superb Starling",
-    confidence: 0.78,
-    startTime: 22.1,
-    endTime: 25.7,
-    location: "Samburu County",
-  },
-  {
-    id: "5",
-    species: "Merops pusillus",
-    commonName: "Little Bee-eater",
-    confidence: 0.71,
-    startTime: 30.2,
-    endTime: 33.5,
-    location: "Samburu County",
-  },
-];
+const scrollToId = (id: string) => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const y = el.getBoundingClientRect().top + window.scrollY - 100;
+  window.scrollTo({ top: y, behavior: "smooth" });
+};
 
 const Index = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -79,14 +39,49 @@ const Index = () => {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
+  const [altitude, setAltitude] = useState("");
   const [tekModal, setTekModal] = useState<{ open: boolean; detectionId: string }>({
     open: false,
     detectionId: "",
   });
+  const lastFileId = useRef<string | null>(null);
 
-  const handleGetStarted = () => {
-    document.getElementById("upload")?.scrollIntoView({ behavior: "smooth" });
-  };
+  const completed = useMemo(
+    () => ({
+      upload: !!audioFile,
+      location: !!(latitude && longitude),
+      results: detections.length > 0,
+    }),
+    [audioFile, latitude, longitude, detections.length]
+  );
+
+  const current: StepKey = !audioFile
+    ? "upload"
+    : detections.length === 0
+      ? "location"
+      : "results";
+
+  // Auto-scroll to next step when file is added
+  useEffect(() => {
+    if (audioFile) {
+      const id = `${audioFile.name}-${audioFile.size}`;
+      if (lastFileId.current !== id) {
+        lastFileId.current = id;
+        setTimeout(() => scrollToId("location"), 250);
+      }
+    } else {
+      lastFileId.current = null;
+    }
+  }, [audioFile]);
+
+  // Auto-scroll to results when detections arrive
+  useEffect(() => {
+    if (detections.length > 0) {
+      setTimeout(() => scrollToId("results"), 250);
+    }
+  }, [detections.length]);
+
+  const handleGetStarted = () => scrollToId("upload");
 
   const handleAnalyze = useCallback(
     async (file: File) => {
@@ -155,9 +150,14 @@ const Index = () => {
 
   const activeDetection = detections.find((d) => d.id === tekModal.detectionId);
 
+  const handleJump = (key: StepKey) => scrollToId(key);
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
+      {audioFile && (
+        <StepperNav current={current} completed={completed} onJump={handleJump} />
+      )}
       <HeroSection onGetStarted={handleGetStarted} />
       <HowItWorks />
 
@@ -169,19 +169,23 @@ const Index = () => {
       />
 
       {audioFile && (
-        <div className="container max-w-3xl mx-auto px-6 -mt-12 mb-12">
+        <div id="location" className="container max-w-3xl mx-auto px-6 -mt-12 mb-12 scroll-mt-32">
           <LocationInput
             latitude={latitude}
             longitude={longitude}
+            altitude={altitude}
             onLocationChange={(lat, lon) => {
               setLatitude(lat);
               setLongitude(lon);
             }}
+            onAltitudeChange={setAltitude}
           />
         </div>
       )}
 
-      <SpeciesResults detections={detections} onAnnotate={handleAnnotate} />
+      <div id="results" className="scroll-mt-32">
+        <SpeciesResults detections={detections} onAnnotate={handleAnnotate} />
+      </div>
       <DetectionTimeline detections={detections} />
       <ExportPanel detections={detections} latitude={latitude} longitude={longitude} />
 
