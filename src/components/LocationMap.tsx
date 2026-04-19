@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, LayersControl, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -46,34 +46,45 @@ const LocationMap = ({ latitude, longitude, onPick }: LocationMapProps) => {
   const lon = parseFloat(longitude);
   const valid = Number.isFinite(lat) && Number.isFinite(lon);
   const center: [number, number] = valid ? [lat, lon] : [0.5697, 37.5342];
+  const [ready, setReady] = useState(false);
+
+  // Defer map mount one frame so Leaflet initializes after the
+  // parent container has finalized its layout. Prevents a crash when
+  // the section appears alongside an auto-scroll.
+  useEffect(() => {
+    const id = window.requestAnimationFrame(() => setReady(true));
+    return () => window.cancelAnimationFrame(id);
+  }, []);
 
   const handleClick = (la: number, lo: number) => {
     onPick(la.toFixed(6), lo.toFixed(6));
   };
 
   return (
-    <div className="rounded-xl overflow-hidden border border-border h-[320px] relative z-0">
-      <MapContainer center={center} zoom={valid ? 10 : 5} scrollWheelZoom className="h-full w-full">
-        <LayersControl position="topright">
-          <LayersControl.BaseLayer checked name="Esri Satellite">
-            <TileLayer
-              attribution='Tiles &copy; Esri'
-              url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-              maxZoom={19}
-            />
-          </LayersControl.BaseLayer>
-          <LayersControl.BaseLayer name="OpenStreetMap">
-            <TileLayer
-              attribution='&copy; OpenStreetMap contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{y}/{x}.png"
-              maxZoom={19}
-            />
-          </LayersControl.BaseLayer>
-        </LayersControl>
-        <ClickHandler onPick={handleClick} />
-        {valid && <Marker position={[lat, lon]} />}
-        {valid && <FlyTo lat={lat} lon={lon} />}
-      </MapContainer>
+    <div className="rounded-xl overflow-hidden border border-border h-[320px] relative z-0 bg-muted">
+      {ready && (
+        <MapContainer center={center} zoom={valid ? 10 : 5} scrollWheelZoom className="h-full w-full">
+          <LayersControl position="topright">
+            <LayersControl.BaseLayer checked name="Esri Satellite">
+              <TileLayer
+                attribution='Tiles &copy; Esri'
+                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                maxZoom={19}
+              />
+            </LayersControl.BaseLayer>
+            <LayersControl.BaseLayer name="OpenStreetMap">
+              <TileLayer
+                attribution='&copy; OpenStreetMap contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{y}/{x}.png"
+                maxZoom={19}
+              />
+            </LayersControl.BaseLayer>
+          </LayersControl>
+          <ClickHandler onPick={handleClick} />
+          {valid && <Marker position={[lat, lon]} />}
+          {valid && <FlyTo lat={lat} lon={lon} />}
+        </MapContainer>
+      )}
       <div className="absolute bottom-2 left-2 z-[400] bg-card/90 backdrop-blur px-2 py-1 rounded-md text-xs font-body text-muted-foreground shadow-card">
         Click the map to pick a location
       </div>

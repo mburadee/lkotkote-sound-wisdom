@@ -155,9 +155,9 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      {audioFile && (
+      <div className={audioFile ? "block" : "hidden"}>
         <StepperNav current={current} completed={completed} onJump={handleJump} />
-      )}
+      </div>
       <HeroSection onGetStarted={handleGetStarted} />
       <HowItWorks />
 
@@ -168,8 +168,13 @@ const Index = () => {
         onFileChange={setAudioFile}
       />
 
-      {audioFile && (
-        <div id="location" className="container max-w-3xl mx-auto px-6 -mt-12 mb-12 scroll-mt-32">
+      <div
+        id="location"
+        className={`container max-w-3xl mx-auto px-6 -mt-12 mb-12 scroll-mt-32 ${
+          audioFile ? "block" : "hidden"
+        }`}
+      >
+        {audioFile && (
           <LocationInput
             latitude={latitude}
             longitude={longitude}
@@ -180,8 +185,8 @@ const Index = () => {
             }}
             onAltitudeChange={setAltitude}
           />
-        </div>
-      )}
+        )}
+      </div>
 
       <div id="results" className="scroll-mt-32">
         <SpeciesResults detections={detections} onAnnotate={handleAnnotate} />
