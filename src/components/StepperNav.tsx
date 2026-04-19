@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 
 export type StepKey = "upload" | "location" | "results";
@@ -17,11 +16,7 @@ const STEPS: { key: StepKey; label: string }[] = [
 
 const StepperNav = ({ current, completed, onJump }: StepperNavProps) => {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -8 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="sticky top-16 z-30 backdrop-blur-md bg-background/80 border-b border-border"
-    >
+    <div className="sticky top-16 z-30 backdrop-blur-md bg-background/80 border-b border-border">
       <div className="container max-w-4xl mx-auto px-6 py-3 flex items-center justify-center gap-2 sm:gap-4">
         {STEPS.map((step, i) => {
           const isCurrent = current === step.key;
@@ -56,7 +51,7 @@ const StepperNav = ({ current, completed, onJump }: StepperNavProps) => {
           );
         })}
       </div>
-    </motion.div>
+    </div>
   );
 };
 

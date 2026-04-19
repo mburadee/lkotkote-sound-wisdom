@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import { MapPin, Check, Mountain, Loader2 } from "lucide-react";
 import LocationMap from "./LocationMap";
 
@@ -69,11 +68,7 @@ const LocationInput = ({
   }, [latitude, longitude]);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-card rounded-2xl p-6 shadow-card space-y-5"
-    >
+    <div className="bg-card rounded-2xl p-6 shadow-card space-y-5">
       <div className="flex items-center gap-2">
         <MapPin className="w-5 h-5 text-primary" />
         <h3 className="font-display font-semibold text-foreground">Recording Location</h3>
@@ -138,7 +133,7 @@ const LocationInput = ({
           </>
         )}
       </button>
-    </motion.div>
+    </div>
   );
 };
 
