@@ -1,5 +1,4 @@
 import { useState, useRef, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Upload, Mic, Loader2 } from "lucide-react";
 import AudioPlayer from "./AudioPlayer";
 import AudioRecorder from "./AudioRecorder";
@@ -36,29 +35,17 @@ const AudioUpload = ({ onAnalyze, isAnalyzing, file, onFileChange }: AudioUpload
   return (
     <section id="upload" className="py-24">
       <div className="container max-w-3xl mx-auto px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-12"
-        >
+        <div className="text-center mb-12">
           <h2 className="text-3xl md:text-5xl font-display font-bold text-foreground mb-4">
             Upload a Recording
           </h2>
           <p className="text-lg font-body text-muted-foreground">
             Drop your bird audio file below to begin species detection.
           </p>
-        </motion.div>
+        </div>
 
-        <AnimatePresence mode="wait">
-          {file ? (
-            <motion.div
-              key="player"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="space-y-4"
-            >
+        {file ? (
+          <div className="space-y-4">
               <AudioPlayer file={file} onRemove={() => onFileChange(null)} />
               <div className="text-center">
                 <button
@@ -77,26 +64,22 @@ const AudioUpload = ({ onAnalyze, isAnalyzing, file, onFileChange }: AudioUpload
                   )}
                 </button>
               </div>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="dropzone"
-              initial={{ opacity: 0, scale: 0.97 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
-              className={`relative rounded-2xl border-2 border-dashed p-12 text-center transition-colors cursor-pointer ${
-                dragOver
-                  ? "border-primary bg-primary/5"
-                  : "border-border hover:border-primary/50 bg-card"
-              }`}
-              onDragOver={(e) => {
-                e.preventDefault();
-                setDragOver(true);
-              }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={handleDrop}
-              onClick={() => inputRef.current?.click()}
-            >
+          </div>
+        ) : (
+          <div
+            className={`relative rounded-2xl border-2 border-dashed p-12 text-center transition-colors cursor-pointer ${
+              dragOver
+                ? "border-primary bg-primary/5"
+                : "border-border hover:border-primary/50 bg-card"
+            }`}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOver(true);
+            }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={handleDrop}
+            onClick={() => inputRef.current?.click()}
+          >
               <input
                 ref={inputRef}
                 type="file"
@@ -119,9 +102,8 @@ const AudioUpload = ({ onAnalyze, isAnalyzing, file, onFileChange }: AudioUpload
                   </p>
                 </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+          </div>
+        )}
 
         {!file && (
           <div className="mt-6 flex flex-col items-center">
