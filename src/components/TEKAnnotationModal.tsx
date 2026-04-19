@@ -27,6 +27,7 @@ const TEKAnnotationModal = ({ isOpen, speciesName, onClose, onSave }: Props) => 
     <AnimatePresence>
       {isOpen && (
         <motion.div
+          key="tek-modal-backdrop"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
