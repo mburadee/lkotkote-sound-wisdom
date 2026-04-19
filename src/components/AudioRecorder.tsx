@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
 import { Mic, Square, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -72,16 +71,12 @@ const AudioRecorder = ({ onRecorded }: AudioRecorderProps) => {
   return (
     <div className="flex flex-col items-center gap-3 py-2">
       {recording ? (
-        <>
-          <motion.div
-            animate={{ scale: [1, 1.15, 1] }}
-            transition={{ duration: 1.2, repeat: Infinity }}
-            className="w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center"
-          >
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center animate-pulse">
             <div className="w-14 h-14 rounded-full bg-destructive flex items-center justify-center">
               <Mic className="w-6 h-6 text-destructive-foreground" />
             </div>
-          </motion.div>
+          </div>
           <p className="font-display text-2xl text-foreground tabular-nums">{mm}:{ss}</p>
           <button
             onClick={stop}
@@ -89,7 +84,7 @@ const AudioRecorder = ({ onRecorded }: AudioRecorderProps) => {
           >
             <Square className="w-4 h-4" /> Stop & Use Recording
           </button>
-        </>
+        </div>
       ) : (
         <button
           onClick={start}
