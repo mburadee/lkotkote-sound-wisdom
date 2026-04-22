@@ -57,7 +57,8 @@ Deno.serve(async (req) => {
 
     // Forward to upstream BirdNET-Analyzer server
     const upstreamForm = new FormData();
-    upstreamForm.append("audio", audio, audio.name);
+    // BirdNET REST server expects field name "file"
+    upstreamForm.append("file", audio, audio.name);
     upstreamForm.append("lat", lat);
     upstreamForm.append("lon", lon);
     upstreamForm.append("week", week);
