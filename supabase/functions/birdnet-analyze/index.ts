@@ -5,11 +5,6 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// Proxy to a self-hosted BirdNET-Analyzer server.
-// Expected upstream: https://github.com/birdnet-team/BirdNET-Analyzer
-//   POST {BIRDNET_SERVER_URL}/analyze   (multipart: audio file + lat/lon/week/min_conf)
-// The upstream response shape varies by deployment; we normalize it below.
-
 interface BirdNetSegment {
   start: number;
   end: number;
@@ -53,11 +48,9 @@ Deno.serve(async (req) => {
     const lat = inboundForm.get("lat")?.toString() ?? "-1";
     const lon = inboundForm.get("lon")?.toString() ?? "-1";
     const week = inboundForm.get("week")?.toString() ?? "-1";
-    const minConf = inboundForm.get("min_conf")?.toString() ?? "0.5";
+    const minConf = inboundForm.get("min_conf")?.toString() ?? "0.1";
 
-    // Forward to upstream BirdNET-Analyzer server
     const upstreamForm = new FormData();
-    // BirdNET REST server expects field name "file"
     upstreamForm.append("file", audio, audio.name);
     upstreamForm.append("lat", lat);
     upstreamForm.append("lon", lon);
@@ -68,6 +61,7 @@ Deno.serve(async (req) => {
 
     let base = BIRDNET_SERVER_URL.replace(/\/$/, "");
     if (!/^https?:\/\//i.test(base)) base = `https://${base}`;
+
     const upstreamRes = await fetch(`${base}/analyze`, {
       method: "POST",
       body: upstreamForm,
@@ -75,7 +69,7 @@ Deno.serve(async (req) => {
 
     const text = await upstreamRes.text();
     if (!upstreamRes.ok) {
-      console.error("BirdNET upstream error", upstreamRes.status, text);
+      console.error("BirdNET upstream HTTP error", upstreamRes.status, text);
       return new Response(
         JSON.stringify({
           error: `BirdNET server returned ${upstreamRes.status}`,
@@ -95,11 +89,25 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Normalize — BirdNET-Analyzer server typically returns either:
-    //   { results: { "0.0;3.0": [{ common_name, scientific_name, confidence }] } }
-    //   or an array of segments
-    const detections: NormalizedDetection[] = [];
+    const r = raw as Record<string, unknown>;
 
+    // Surface upstream-reported processing errors
+    if (r.status === "error") {
+      console.error("BirdNET upstream processing error", r);
+      return new Response(
+        JSON.stringify({
+          error: "BirdNET processing failed on the server",
+          details: typeof r.message === "string"
+            ? r.message
+            : typeof r.stderr === "string"
+              ? r.stderr
+              : JSON.stringify(r).slice(0, 500),
+        }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    const detections: NormalizedDetection[] = [];
     const pushDetection = (seg: BirdNetSegment) => {
       detections.push({
         id: crypto.randomUUID(),
@@ -111,10 +119,13 @@ Deno.serve(async (req) => {
       });
     };
 
-    const r = raw as Record<string, unknown>;
-    if (Array.isArray(r.results)) {
+    // Preferred shape from our updated HF wrapper: { status, detections: [...] }
+    if (Array.isArray(r.detections)) {
+      (r.detections as BirdNetSegment[]).forEach(pushDetection);
+    } else if (Array.isArray(r.results)) {
       (r.results as BirdNetSegment[]).forEach(pushDetection);
     } else if (r.results && typeof r.results === "object") {
+      // Legacy shape: { results: { "0.0;3.0": [{...}] } }
       for (const [range, items] of Object.entries(r.results as Record<string, unknown>)) {
         const [startStr, endStr] = range.split(";");
         const start = parseFloat(startStr);
@@ -134,6 +145,9 @@ Deno.serve(async (req) => {
     } else if (Array.isArray(raw)) {
       (raw as BirdNetSegment[]).forEach(pushDetection);
     }
+
+    // Sort by start time then confidence desc
+    detections.sort((a, b) => a.startTime - b.startTime || b.confidence - a.confidence);
 
     return new Response(JSON.stringify({ detections }), {
       status: 200,

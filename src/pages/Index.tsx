@@ -91,7 +91,7 @@ const Index = () => {
         formData.append("audio", file);
         if (latitude) formData.append("lat", latitude);
         if (longitude) formData.append("lon", longitude);
-        formData.append("min_conf", "0.5");
+        formData.append("min_conf", "0.1");
 
         const { data, error } = await supabase.functions.invoke("birdnet-analyze", {
           body: formData,
