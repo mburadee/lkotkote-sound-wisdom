@@ -192,7 +192,12 @@ const Index = () => {
         <SpeciesResults detections={detections} onAnnotate={handleAnnotate} />
       </div>
       <DetectionTimeline detections={detections} />
-      <ExportPanel detections={detections} latitude={latitude} longitude={longitude} />
+      <ExportPanel
+        detections={detections}
+        latitude={latitude}
+        longitude={longitude}
+        onAddTEK={handleAnnotate}
+      />
 
       <TEKAnnotationModal
         isOpen={tekModal.open}
