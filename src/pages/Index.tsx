@@ -1,9 +1,11 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Mic, Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import HowItWorks from "@/components/HowItWorks";
+import FeaturedBirds from "@/components/FeaturedBirds";
 import AudioUpload from "@/components/AudioUpload";
 import LocationInput from "@/components/LocationInput";
 import SpeciesResults, { type Detection } from "@/components/SpeciesResults";
@@ -160,17 +162,16 @@ const Index = () => {
       </div>
       <HeroSection onGetStarted={handleGetStarted} />
       <HowItWorks />
+      <FeaturedBirds />
 
       <AudioUpload
-        onAnalyze={handleAnalyze}
-        isAnalyzing={isAnalyzing}
         file={audioFile}
         onFileChange={setAudioFile}
       />
 
       <div
         id="location"
-        className={`container max-w-3xl mx-auto px-6 -mt-12 mb-12 scroll-mt-32 ${
+        className={`container max-w-3xl mx-auto px-6 -mt-12 mb-8 scroll-mt-32 ${
           audioFile ? "block" : "hidden"
         }`}
       >
@@ -187,6 +188,31 @@ const Index = () => {
           />
         )}
       </div>
+
+      {audioFile && (
+        <div className="container max-w-3xl mx-auto px-6 mb-16 text-center">
+          <button
+            onClick={() => handleAnalyze(audioFile)}
+            disabled={isAnalyzing}
+            className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-gradient-forest text-sand-light font-body font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 shadow-warm"
+          >
+            {isAnalyzing ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" /> Analyzing…
+              </>
+            ) : (
+              <>
+                <Mic className="w-5 h-5" /> Analyze Recording
+              </>
+            )}
+          </button>
+          {!(latitude && longitude) && (
+            <p className="text-xs font-body text-muted-foreground mt-3">
+              Tip: add a location above for more accurate species filtering.
+            </p>
+          )}
+        </div>
+      )}
 
       <div id="results" className="scroll-mt-32">
         <SpeciesResults detections={detections} onAnnotate={handleAnnotate} />

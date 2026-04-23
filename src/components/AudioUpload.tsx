@@ -1,16 +1,14 @@
 import { useState, useRef, useCallback } from "react";
-import { Upload, Mic, Loader2 } from "lucide-react";
+import { Upload } from "lucide-react";
 import AudioPlayer from "./AudioPlayer";
 import AudioRecorder from "./AudioRecorder";
 
 interface AudioUploadProps {
-  onAnalyze: (file: File) => void;
-  isAnalyzing: boolean;
   file: File | null;
   onFileChange: (file: File | null) => void;
 }
 
-const AudioUpload = ({ onAnalyze, isAnalyzing, file, onFileChange }: AudioUploadProps) => {
+const AudioUpload = ({ file, onFileChange }: AudioUploadProps) => {
   const [dragOver, setDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -46,24 +44,10 @@ const AudioUpload = ({ onAnalyze, isAnalyzing, file, onFileChange }: AudioUpload
 
         {file ? (
           <div className="space-y-4">
-              <AudioPlayer file={file} onRemove={() => onFileChange(null)} />
-              <div className="text-center">
-                <button
-                  onClick={() => onAnalyze(file)}
-                  disabled={isAnalyzing}
-                  className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-gradient-forest text-sand-light font-body font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 shadow-warm"
-                >
-                  {isAnalyzing ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" /> Analyzing…
-                    </>
-                  ) : (
-                    <>
-                      <Mic className="w-5 h-5" /> Analyze Recording
-                    </>
-                  )}
-                </button>
-              </div>
+            <AudioPlayer file={file} onRemove={() => onFileChange(null)} />
+            <p className="text-center text-sm font-body text-muted-foreground">
+              Next: set the recording location below, then run the analysis.
+            </p>
           </div>
         ) : (
           <div
