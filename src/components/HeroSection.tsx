@@ -50,14 +50,16 @@ const HeroSection = ({ onGetStarted }: { onGetStarted: () => void }) => {
           by blending AI-powered bioacoustics with Traditional Ecological Knowledge.
         </motion.p>
 
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6 }}
-          className="text-sm font-body text-sand/60 mb-10 italic"
+          className="mb-10 flex justify-center"
         >
-          Named after the Samburu word for the Eastern Yellow-billed Hornbill
-        </motion.p>
+          <span className="inline-block px-4 py-2 rounded-full bg-savanna-gold/15 border border-savanna-gold/40 text-sm md:text-base font-body font-medium text-savanna-gold backdrop-blur-sm shadow-warm">
+            Named after the Samburu word for the Eastern Yellow-billed Hornbill
+          </span>
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
