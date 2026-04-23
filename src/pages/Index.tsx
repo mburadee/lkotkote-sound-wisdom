@@ -5,7 +5,6 @@ import { Mic, Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import HowItWorks from "@/components/HowItWorks";
-import FeaturedBirds from "@/components/FeaturedBirds";
 import AudioUpload from "@/components/AudioUpload";
 import LocationInput from "@/components/LocationInput";
 import SpeciesResults, { type Detection } from "@/components/SpeciesResults";
@@ -162,7 +161,6 @@ const Index = () => {
       </div>
       <HeroSection onGetStarted={handleGetStarted} />
       <HowItWorks />
-      <FeaturedBirds />
 
       <AudioUpload
         file={audioFile}
