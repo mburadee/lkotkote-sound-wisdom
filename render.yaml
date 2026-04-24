@@ -1,0 +1,56 @@
+# Render Blueprint for Lkotkote (Vite + React static site)
+# Docs: https://render.com/docs/blueprint-spec
+#
+# After committing this file to your repo:
+#   1. In Render dashboard: New + → Blueprint
+#   2. Connect your GitHub repo and select the branch
+#   3. Render will detect this file and provision the service
+#   4. Fill in the env var values when prompted (sync: false below)
+
+services:
+  - type: web
+    name: lkotkote-frontend
+    runtime: static
+    plan: free
+    branch: main
+    autoDeploy: true
+
+    # Build the Vite app. If `bun` is unavailable on your Render plan,
+    # swap to: npm install && npm run build
+    buildCommand: npm install && npm run build
+
+    # Vite outputs to ./dist by default
+    staticPublishPath: ./dist
+
+    # Environment variables required at BUILD time by Vite.
+    # `sync: false` means Render will prompt you to enter the value
+    # in the dashboard (kept out of the repo).
+    envVars:
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: VITE_SUPABASE_PROJECT_ID
+        sync: false
+
+    # SPA rewrite: every unknown path serves index.html so React Router
+    # can handle client-side routing (fixes 404 on refresh / deep links).
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+    # Long-cache hashed assets, no-cache the HTML shell.
+    headers:
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
