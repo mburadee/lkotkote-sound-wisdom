@@ -1,83 +1,130 @@
+<div align="center">
+
+<img src="docs/logo.png" alt="Lkotkote logo" width="140" />
+
 # Lkotkote — Sound Wisdom
 
-> Bird sound identification powered by BirdNET, named after the Samburu word for the Eastern Yellow-billed Hornbill.
+### *Bird sound identification powered by BirdNET, named after the Samburu word for the Eastern Yellow-billed Hornbill.*
 
-Lkotkote lets you record or upload bird audio, runs it through the BirdNET acoustic model, plots detections on an interactive timeline and map, captures Traditional Ecological Knowledge (TEK) annotations, and exports results in Darwin Core format for biodiversity research.
+[![Live App](https://img.shields.io/badge/Live%20App-lkotkote--sound--wisdom.lovable.app-2E7D5B?style=for-the-badge&logo=vercel&logoColor=white)](https://lkotkote-sound-wisdom.lovable.app)
+[![Built with Lovable](https://img.shields.io/badge/Built%20with-Lovable-FF5C8A?style=for-the-badge)](https://lovable.dev)
+[![Deploy on Render](https://img.shields.io/badge/Deploy-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://render.com)
 
-🔗 **Live app:** https://lkotkote-sound-wisdom.lovable.app
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-3-38B2AC?logo=tailwindcss&logoColor=white)
+![Supabase](https://img.shields.io/badge/Lovable%20Cloud-Supabase-3ECF8E?logo=supabase&logoColor=white)
+![License](https://img.shields.io/badge/license-MIT-blue)
+
+<br />
+
+<img src="docs/screenshots/hero.png" alt="Lkotkote hero — savanna at golden hour with the tagline 'Named after the Samburu word for the Eastern Yellow-billed Hornbill'" width="900" />
+
+</div>
 
 ---
 
-## 1. Quick Start — Simple Step-by-Step
+Lkotkote turns bird audio into ecological insight. Record or upload a clip, run it through the **BirdNET** acoustic model, plot detections on a timeline and map, capture **Traditional Ecological Knowledge (TEK)** annotations, and export in **Darwin Core** format for biodiversity research.
 
-### Use the app (no install)
-1. Open the live app: https://lkotkote-sound-wisdom.lovable.app
-2. **Record** audio with your microphone, or **Upload** a `.wav` / `.mp3` file.
-3. Add a **location** (search, click the map, or use your GPS).
-4. Click **Analyze** — BirdNET will identify the species in the recording.
-5. Review detections on the **timeline**, add **TEK annotations**, then **Export** as Darwin Core CSV/ZIP.
+> 🔗 **Try it now:** **https://lkotkote-sound-wisdom.lovable.app**
+
+---
+
+## ✨ Highlights
+
+- 🎙️ **Record or upload** — WAV, MP3, OGG, FLAC, or M4A (≤ 50 MB)
+- 🧠 **BirdNET-Analyzer** species detection with confidence scores
+- 📍 **Geo-aware** — interactive Leaflet map for location-tuned predictions
+- 🌊 **Waveform timeline** — click a detection to jump to that moment
+- 📖 **TEK annotations** — capture local names, behaviour, and cultural context
+- 📦 **Darwin Core export** — CSV / ZIP bundle ready for GBIF
+- 🔐 **Auth-ready backend** — email + Google OAuth via Lovable Cloud
+
+---
+
+## 🚀 1 · Quick Start (Simple, Step-by-Step)
+
+### Use it (no install)
+1. Open **https://lkotkote-sound-wisdom.lovable.app**
+2. **Record** with your mic or **Upload** an audio file
+3. Set your **location** (search, map click, or GPS)
+4. Click **Analyze** — BirdNET identifies the species
+5. Review on the **timeline**, add **TEK** notes, then **Export**
 
 ### Run it locally
 ```bash
-# 1. Clone the repo
 git clone <YOUR_GITHUB_URL>
 cd <YOUR_REPO_NAME>
-
-# 2. Install dependencies
 npm install
-
-# 3. Start the dev server
 npm run dev
 ```
-Then open http://localhost:8080.
+Open **http://localhost:8080**.
 
-> The `.env` file with backend keys is auto-managed by Lovable Cloud. If self-hosting, see **Environment Variables** below.
+> The `.env` file with backend keys is auto-managed by Lovable Cloud. For self-hosted builds, see [Environment Variables](#environment-variables).
 
 ---
 
-## 2. Technical Details
+## 🖼️ Screenshots
+
+<table>
+  <tr>
+    <td align="center"><b>Landing</b><br /><img src="docs/screenshots/hero.png" alt="Landing page" width="420" /></td>
+    <td align="center"><b>How It Works</b><br /><img src="docs/screenshots/how-it-works.png" alt="How It Works section showing the four-step workflow" width="420" /></td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2"><b>Upload a Recording</b><br /><img src="docs/screenshots/upload.png" alt="Upload screen with drag-and-drop area and live recording option" width="700" /></td>
+  </tr>
+</table>
+
+---
+
+## 🧱 2 · Technical Details
 
 ### Architecture
+
 | Layer | Technology |
 |---|---|
-| Frontend | React 18 + Vite 5 + TypeScript 5 |
-| Styling | Tailwind CSS v3 + shadcn/ui (Radix primitives) |
-| State / Data | TanStack Query, React Hook Form + Zod |
-| Audio | WaveSurfer.js (waveform), MediaRecorder API |
-| Maps | Leaflet + React-Leaflet |
+| Frontend | React 18 · Vite 5 · TypeScript 5 |
+| Styling | Tailwind CSS v3 · shadcn/ui (Radix) |
+| State / Data | TanStack Query · React Hook Form + Zod |
+| Audio | WaveSurfer.js · MediaRecorder API |
+| Maps | Leaflet · React-Leaflet |
 | Animation | Framer Motion |
-| Backend | Lovable Cloud (Supabase: Postgres, Auth, Storage, Edge Functions) |
+| Backend | **Lovable Cloud** (Supabase: Postgres, Auth, Storage, Edge Functions) |
 | ML inference | BirdNET via `supabase/functions/birdnet-analyze` (Deno edge function) |
-| Export | Darwin Core CSV bundled into ZIP via `jszip` + `file-saver` |
-| Tests | Vitest + Testing Library + jsdom |
+| Export | Darwin Core CSV → ZIP via `jszip` + `file-saver` |
+| Tests | Vitest · Testing Library · jsdom |
 
 ### Project structure
 ```
 src/
-├── components/         # UI: HeroSection, AudioRecorder, AudioUpload,
+├── components/         # HeroSection, AudioRecorder, AudioUpload,
 │                       # SpeciesResults, DetectionTimeline, LocationMap,
 │                       # TEKAnnotationModal, ExportPanel, Navbar, …
 ├── pages/              # Index.tsx (main flow), NotFound.tsx
 ├── lib/
-│   ├── darwin-core-export.ts   # Biodiversity data export
+│   ├── darwin-core-export.ts
 │   └── utils.ts
 ├── integrations/supabase/      # Auto-generated client + types (do not edit)
 ├── hooks/              # use-toast, use-mobile
-├── assets/             # logo, images
-└── index.css           # Design tokens (HSL semantic colors)
+├── assets/             # logo, hero, hornbill imagery
+└── index.css           # HSL semantic design tokens
 
 supabase/
 ├── config.toml
 └── functions/birdnet-analyze/  # Edge function calling BirdNET
 
+docs/                    # README media (logo, screenshots)
 public/                  # Static assets, logo, robots.txt
 render.yaml              # Render Blueprint for static deploy
 ```
 
 ### Available scripts
+
 | Command | Purpose |
 |---|---|
-| `npm run dev` | Start Vite dev server |
+| `npm run dev` | Start Vite dev server (port 8080) |
 | `npm run build` | Production build → `dist/` |
 | `npm run build:dev` | Dev-mode build (sourcemaps) |
 | `npm run preview` | Preview the built app |
@@ -86,46 +133,51 @@ render.yaml              # Render Blueprint for static deploy
 | `npm run test:watch` | Vitest in watch mode |
 
 ### Environment variables
+
 Required at **build time** (Vite inlines them):
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_PUBLISHABLE_KEY`
-- `VITE_SUPABASE_PROJECT_ID`
 
-For Lovable users these are auto-provisioned via Lovable Cloud. For self-hosted builds, copy them from your Lovable Cloud settings into your hosting provider's env config.
+| Variable | Purpose |
+|---|---|
+| `VITE_SUPABASE_URL` | Lovable Cloud project URL |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Public anon key (safe in client) |
+| `VITE_SUPABASE_PROJECT_ID` | Project ref |
 
-### Backend (Lovable Cloud / Supabase)
-- **Auth:** email + password and Google OAuth.
-- **Storage:** uploaded recordings stored in a private bucket.
-- **Edge function `birdnet-analyze`:** receives an audio file reference + lat/lon, runs BirdNET, returns `{ species, confidence, start, end }[]`.
-- **Database:** stores recordings, detections, and TEK annotations with Row-Level Security so users only see their own data.
+Lovable users get these auto-provisioned. For self-hosted builds, copy them from your Lovable Cloud settings into your hosting provider.
+
+### Backend (Lovable Cloud)
+
+- **Auth** — email + password and Google OAuth
+- **Storage** — uploaded recordings stored in a private bucket
+- **Edge function `birdnet-analyze`** — receives audio + lat/lon, runs BirdNET, returns `{ species, confidence, start, end }[]`
+- **Database** — recordings, detections, and TEK annotations protected by Row-Level Security so users only see their own data
 
 ---
 
-## 3. How to Use the Application
+## 🧭 3 · How to Use the Application
 
-1. **Sign in** (or continue as guest, depending on configured policy).
+1. **Sign in** (or continue as a guest, depending on the configured policy).
 2. **Capture audio**
-   - *Record:* press the mic button, stop when done.
-   - *Upload:* drag & drop a `.wav`, `.mp3`, or `.flac` file.
+   - *Record* — press the mic, speak/listen, stop when done.
+   - *Upload* — drag & drop a `.wav`, `.mp3`, `.flac`, `.ogg`, or `.m4a` file (≤ 50 MB).
 3. **Set location** — required for BirdNET's geographic species filter.
 4. **Analyze** — the edge function runs BirdNET on your clip.
 5. **Review results**
-   - Species list with confidence scores.
-   - Click a row to jump the waveform to that detection.
-   - Timeline view shows detections over time.
-6. **Annotate (TEK)** — add Traditional Ecological Knowledge: local name, cultural notes, behavior observations.
-7. **Export** — download Darwin Core-compliant CSV (single occurrence file or ZIP bundle with media + metadata) for upload to GBIF/eBird-style platforms.
+   - Species list with confidence scores
+   - Click a row to jump the waveform to that detection
+   - Timeline view shows detections over time
+6. **Annotate (TEK)** — local name, cultural notes, behaviour observations.
+7. **Export** — Darwin Core CSV (single file) or ZIP bundle (media + metadata) for GBIF / eBird-style platforms.
 
 ---
 
-## 4. Deployment
+## ☁️ 4 · Deployment
 
-### Option A — Lovable (recommended, one click)
+### Option A — Lovable (one click, recommended)
 1. In the Lovable editor, click **Publish** (top-right).
 2. Your app is live at `https://<your-project>.lovable.app`.
 3. Connect a custom domain in **Project Settings → Domains**.
 
-Frontend changes require clicking **Update** in the publish dialog. Backend changes (edge functions, migrations) deploy automatically.
+Frontend changes redeploy via **Update**. Backend changes (edge functions, migrations) deploy automatically.
 
 ### Option B — Render (static site via Blueprint)
 A ready-to-use `render.yaml` is included at the repo root.
@@ -136,12 +188,12 @@ A ready-to-use `render.yaml` is included at the repo root.
    - `VITE_SUPABASE_URL`
    - `VITE_SUPABASE_PUBLISHABLE_KEY`
    - `VITE_SUPABASE_PROJECT_ID`
-4. Render will run:
+4. Render runs:
    - **Build Command:** `npm install && npm run build`
    - **Publish Directory:** `dist`
 5. SPA routing (`/* → /index.html`) and security/cache headers are pre-configured in `render.yaml`.
 
-### Option C — Any static host (Netlify, Vercel, Cloudflare Pages, S3+CloudFront)
+### Option C — Any static host (Netlify, Vercel, Cloudflare Pages, S3 + CloudFront)
 1. `npm install && npm run build`
 2. Upload the contents of `dist/` to your host.
 3. Configure a SPA fallback so unknown paths serve `/index.html`.
@@ -151,19 +203,19 @@ A ready-to-use `render.yaml` is included at the repo root.
 
 ---
 
-## 5. Troubleshooting
+## 🛠️ 5 · Troubleshooting
 
 | Problem | Fix |
 |---|---|
 | Blank page after deploy | Verify the three `VITE_SUPABASE_*` env vars are set in your host. |
 | 404 on page refresh | Ensure SPA rewrite `/* → /index.html` is configured. |
 | `bun: command not found` on Render | Already handled — `render.yaml` uses `npm`. |
-| BirdNET returns no detections | Check audio is ≥3 s, contains bird calls, and location is set. |
+| BirdNET returns no detections | Audio should be ≥ 3 s, contain bird calls, and have a location set. |
 | CORS errors | Add your deployed URL to allowed origins in Lovable Cloud settings. |
 
 ---
 
-## 6. Contributing
+## 🤝 6 · Contributing
 
 1. Create a feature branch.
 2. Run `npm run lint && npm test` before pushing.
@@ -171,6 +223,16 @@ A ready-to-use `render.yaml` is included at the repo root.
 
 ---
 
-## License
+## 📜 License
 
 MIT — see `LICENSE` (add one if distributing).
+
+<br />
+
+<div align="center">
+
+<img src="docs/logo.png" alt="Lkotkote" width="60" />
+
+**Lkotkote — listening to the land, with the people who know it best.**
+
+</div>
