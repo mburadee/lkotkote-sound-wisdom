@@ -6,15 +6,14 @@
 
 ### *Bird sound identification powered by BirdNET, named after the Samburu word for the Eastern Yellow-billed Hornbill.*
 
-[![Live App](https://img.shields.io/badge/Live%20App-lkotkote--sound--wisdom.lovable.app-2E7D5B?style=for-the-badge&logo=vercel&logoColor=white)](https://lkotkote-sound-wisdom.lovable.app)
-[![Built with Lovable](https://img.shields.io/badge/Built%20with-Lovable-FF5C8A?style=for-the-badge)](https://lovable.dev)
-[![Deploy on Render](https://img.shields.io/badge/Deploy-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://render.com)
+[![Live App](https://img.shields.io/badge/Live%20App-lkotkote--sound--wisdom.lovable.app-2E7D5B?style=for-the-badge&logo=vercel&logoColor=white)](https://lkotkote.org)
+[![Deploy on Vercel](https://img.shields.io/badge/Deploy-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://vercel.com)
 
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
 ![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-3-38B2AC?logo=tailwindcss&logoColor=white)
-![Supabase](https://img.shields.io/badge/Lovable%20Cloud-Supabase-3ECF8E?logo=supabase&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?logo=supabase&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
 <br />
