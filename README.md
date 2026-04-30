@@ -6,8 +6,8 @@
 
 ### *Bird sound identification powered by BirdNET, named after the Samburu word for the Eastern Yellow-billed Hornbill.*
 
-[![Live App](https://img.shields.io/badge/Live%20App-lkotkote--sound--wisdom.lovable.app-2E7D5B?style=for-the-badge&logo=vercel&logoColor=white)](https://lkotkote.org)
-[![Deploy on Vercel](https://img.shields.io/badge/Deploy-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://vercel.com)
+[![Live App](https://img.shields.io/badge/Live%20App-lkotkote.org-2E7D5B?style=for-the-badge&logo=vercel&logoColor=white)](https://lkotkote.org)
+[![Deploy on Vercel](https://img.shields.io/badge/Deploy-Vercel-46E3B7?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com)
 
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
 ![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)
