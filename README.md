@@ -223,6 +223,8 @@ A ready-to-use `render.yaml` is included at the repo root.
 ---
 
 ## 📜 License
+MIT License
+Copyright (c) 2026 mburadee
 
 <br />
 
