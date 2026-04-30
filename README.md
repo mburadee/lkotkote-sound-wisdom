@@ -32,13 +32,13 @@ Lkotkote turns bird audio into ecological insight. Record or upload a clip, run 
 
 ## ✨ Highlights
 
-- 🎙️ **Record or upload** — WAV, MP3, OGG, FLAC, or M4A (≤ 50 MB)
-- 🧠 **BirdNET-Analyzer** species detection with confidence scores
-- 📍 **Geo-aware** — interactive Leaflet map for location-tuned predictions
-- 🌊 **Waveform timeline** — click a detection to jump to that moment
-- 📖 **TEK annotations** — capture local names, behaviour, and cultural context
-- 📦 **Darwin Core export** — CSV / ZIP bundle ready for GBIF
-- 🔐 **Auth-ready backend** — email + Google OAuth via Lovable Cloud
+- **Record or upload** — WAV, MP3, OGG, FLAC, or M4A (≤ 50 MB)
+- **BirdNET-Analyzer** species detection with confidence scores
+- **Geo-aware** — interactive Leaflet map for location-tuned predictions
+- **Waveform timeline** — click a detection to jump to that moment
+- **TEK annotations** — capture local names, behaviour, and cultural context
+- **Darwin Core export** — CSV / ZIP bundle ready for GBIF
+- **Auth-ready backend** — email + Google OAuth via Lovable Cloud
 
 ---
 
