@@ -9,7 +9,17 @@ interface Props {
   onSave: (annotation: string, season: string) => void;
 }
 
-const seasons = ["Dry Season", "Short Rains", "Long Rains", "Cool Dry", "Migration"];
+const seasons = [
+  "Winter",
+  "Spring",
+  "Summer",
+  "Autumn",
+  "Dry Season",
+  "Short Rains",
+  "Long Rains",
+  "Cool Dry",
+  "Migration",
+];
 
 const TEKAnnotationModal = ({ isOpen, speciesName, onClose, onSave }: Props) => {
   const [annotation, setAnnotation] = useState("");
