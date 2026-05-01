@@ -15,7 +15,7 @@ const Navbar = () => (
       </div>
       <div className="hidden sm:flex items-center gap-6 text-sm font-body text-sand-light/70">
         <a href="/#how-it-works" className="hover:text-sand-light transition-colors">How It Works</a>
-        <a href="/tek" className="hover:text-sand-light transition-colors">Samburu TEK</a>
+        <a href="/tek" className="hover:text-sand-light transition-colors">Featured Sounds</a>
         <a href="/#upload" className="hover:text-sand-light transition-colors">Upload</a>
       </div>
     </div>

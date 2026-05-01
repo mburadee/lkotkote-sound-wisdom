@@ -126,7 +126,7 @@ const SamburuTEK = () => {
   const [filter, setFilter] = useState<SamburuBird["category"] | "all">("all");
 
   useEffect(() => {
-    document.title = "Samburu Bird TEK — Lkotkote";
+    document.title = "Featured Sounds — Lkotkote";
     let cancelled = false;
     (async () => {
       const enriched = await Promise.all(
