@@ -6,7 +6,7 @@ interface Props {
   isOpen: boolean;
   speciesName: string;
   onClose: () => void;
-  onSave: (annotation: string, season: string) => void;
+  onSave: (annotation: string, season: string, localName: string) => void;
 }
 
 const seasons = [
