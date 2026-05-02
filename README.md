@@ -89,7 +89,7 @@ Open **http://localhost:8080**.
 | Audio | WaveSurfer.js · MediaRecorder API |
 | Maps | Leaflet · React-Leaflet |
 | Animation | Framer Motion |
-| Backend | **Lovable Cloud** (Supabase: Postgres, Auth, Storage, Edge Functions) |
+| Backend | (Supabase: Postgres, Auth, Storage, Edge Functions) |
 | ML inference | BirdNET via `supabase/functions/birdnet-analyze` (Deno edge function) |
 | Export | Darwin Core CSV → ZIP via `jszip` + `file-saver` |
 | Tests | Vitest · Testing Library · jsdom |
@@ -140,7 +140,7 @@ Required at **build time** (Vite inlines them):
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Public anon key (safe in client) |
 | `VITE_SUPABASE_PROJECT_ID` | Project ref |
 
-Lovable users get these auto-provisioned. For self-hosted builds, copy them from your Lovable Cloud settings into your hosting provider.
+For self-hosted builds, copy them from Supabase settings into your hosting provider.
 
 ### Backend (Lovable Cloud)
 
