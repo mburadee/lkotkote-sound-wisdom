@@ -94,6 +94,19 @@ const TEKAnnotationModal = ({ isOpen, speciesName, onClose, onSave }: Props) => 
 
               <div>
                 <label className="block text-sm font-body font-medium text-foreground mb-2">
+                  Local Name of Bird
+                </label>
+                <input
+                  type="text"
+                  value={localName}
+                  onChange={(e) => setLocalName(e.target.value)}
+                  placeholder="e.g. Lkotkote (Samburu), Kingoyongoyo (Swahili)"
+                  className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-body text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-body font-medium text-foreground mb-2">
                   Traditional Ecological Knowledge
                 </label>
                 <textarea
