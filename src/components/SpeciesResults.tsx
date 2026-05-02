@@ -10,6 +10,7 @@ export interface Detection {
   endTime: number;
   location?: string;
   tekAnnotation?: string;
+  localName?: string;
   thumbnailUrl?: string;
 }
 
