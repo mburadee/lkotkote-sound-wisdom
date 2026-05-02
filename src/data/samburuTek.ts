@@ -149,6 +149,6 @@ export const SAMBURU_BIRDS: SamburuBird[] = [
     prediction: "Raining season",
     category: "weather",
     story:
-      "Low-flying Nkaiverei chasing insects above the riverbeds tells elders the wet season is fully open — time to plant and move herds.",
+      "Low-flying Nkaiverei chasing insects above the riverbeds tells elders the wet season is fully open — time to move herds.",
   },
 ];
