@@ -59,7 +59,7 @@ npm run dev
 ```
 Open **http://localhost:8080**.
 
-> The `.env` file with backend keys is auto-managed by Lovable Cloud. For self-hosted builds, see [Environment Variables](#environment-variables).
+> The `.env` file with backend keys is auto-managed by Vercel Cloud. For self-hosted builds, see [Environment Variables](#environment-variables).
 
 ---
 
