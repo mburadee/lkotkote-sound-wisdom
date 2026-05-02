@@ -142,9 +142,8 @@ Required at **build time** (Vite inlines them):
 
 For self-hosted builds, copy them from Supabase settings into your hosting provider.
 
-### Backend (Lovable Cloud)
+### Backend
 
-- **Auth** — email + password and Google OAuth
 - **Storage** — uploaded recordings stored in a private bucket
 - **Edge function `birdnet-analyze`** — receives audio + lat/lon, runs BirdNET, returns `{ species, confidence, start, end }[]`
 - **Database** — recordings, detections, and TEK annotations protected by Row-Level Security so users only see their own data
@@ -153,7 +152,7 @@ For self-hosted builds, copy them from Supabase settings into your hosting provi
 
 ## 🧭 3 · How to Use the Application
 
-1. **Sign in** (or continue as a guest, depending on the configured policy).
+1. **Visit Lktokote.org** (or continue as a guest, depending on the configured policy).
 2. **Capture audio**
    - *Record* — press the mic, speak/listen, stop when done.
    - *Upload* — drag & drop a `.wav`, `.mp3`, `.flac`, `.ogg`, or `.m4a` file (≤ 50 MB).
@@ -164,20 +163,13 @@ For self-hosted builds, copy them from Supabase settings into your hosting provi
    - Click a row to jump the waveform to that detection
    - Timeline view shows detections over time
 6. **Annotate (TEK)** — local name, cultural notes, behaviour observations.
-7. **Export** — Darwin Core CSV (single file) or ZIP bundle (media + metadata) for GBIF / eBird-style platforms.
+7. **Export** — Darwin Core, GeoJSON, CSV (single file) or ZIP bundle (media + metadata) for GBIF / eBird-style platforms.
 
 ---
 
 ## ☁️ 4 · Deployment
 
-### Option A — Lovable (one click, recommended)
-1. In the Lovable editor, click **Publish** (top-right).
-2. Your app is live at `https://<your-project>.lovable.app`.
-3. Connect a custom domain in **Project Settings → Domains**.
-
-Frontend changes redeploy via **Update**. Backend changes (edge functions, migrations) deploy automatically.
-
-### Option B — Render (static site via Blueprint)
+### Option A — Render (static site via Blueprint)
 A ready-to-use `render.yaml` is included at the repo root.
 
 1. Push this repo to GitHub (Lovable: top-right → **GitHub → Connect**).
@@ -191,13 +183,13 @@ A ready-to-use `render.yaml` is included at the repo root.
    - **Publish Directory:** `dist`
 5. SPA routing (`/* → /index.html`) and security/cache headers are pre-configured in `render.yaml`.
 
-### Option C — Any static host (Netlify, Vercel, Cloudflare Pages, S3 + CloudFront)
+### Option B — Any static host (Netlify, Vercel, Cloudflare Pages, S3 + CloudFront)
 1. `npm install && npm run build`
 2. Upload the contents of `dist/` to your host.
 3. Configure a SPA fallback so unknown paths serve `/index.html`.
 4. Set the three `VITE_SUPABASE_*` env vars in your host's build settings.
 
-> The Lovable Cloud backend (database, storage, edge functions) keeps running regardless of where the frontend is hosted — you only need to redeploy the frontend.
+>** Note that for fast deployment Vercel is recommended: Just connect your repo and it auto-detects Vite (npm run build + dist)**
 
 ---
 
