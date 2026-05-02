@@ -75,17 +75,19 @@ function buildOccurrenceTsv(options: ExportOptions): string {
   const rows = options.detections.map((d) => {
     const confidence = `BirdNET confidence: ${(d.confidence * 100).toFixed(1)}%`;
     const tek = d.tekAnnotation || "";
+    const localPart = d.localName ? ` [Local name: ${d.localName}]` : "";
+    const vernacular = d.localName ? `${d.commonName} (${d.localName})` : d.commonName;
     return [
       d.id,
       "MachineObservation",
       d.species,
-      d.commonName,
+      vernacular,
       options.recordedDate || new Date().toISOString().split("T")[0],
       options.latitude || "",
       options.longitude || "",
       options.recordedBy || "Lkotkote User",
       confidence,
-      tek,
+      `${tek}${localPart}`,
       "",
     ].join("\t");
   });
