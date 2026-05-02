@@ -28,7 +28,6 @@ function buildMetaXml(): string {
     <field index="8" term="http://rs.tdwg.org/dwc/terms/identificationRemarks"/>
     <field index="9" term="http://rs.tdwg.org/dwc/terms/occurrenceRemarks"/>
     <field index="10" term="http://rs.tdwg.org/dwc/terms/associatedMedia"/>
-    <field index="11" term="http://rs.tdwg.org/dwc/terms/vernacularName"/>
   </core>
 </archive>`;
 }
