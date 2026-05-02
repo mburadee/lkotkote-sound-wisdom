@@ -141,6 +141,7 @@ export function exportJSON(options: ExportOptions): void {
       basisOfRecord: "MachineObservation",
       scientificName: d.species,
       vernacularName: d.commonName,
+      localName: d.localName || null,
       confidence: d.confidence,
       startTime: d.startTime,
       endTime: d.endTime,
