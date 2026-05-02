@@ -106,12 +106,13 @@ export async function exportDarwinCore(options: ExportOptions): Promise<void> {
 }
 
 export function exportCSV(options: ExportOptions): void {
-  const header = "occurrenceID,scientificName,vernacularName,confidence,startTime,endTime,latitude,longitude,tekAnnotation";
+  const header = "occurrenceID,scientificName,vernacularName,localName,confidence,startTime,endTime,latitude,longitude,tekAnnotation";
   const rows = options.detections.map((d) =>
     [
       d.id,
       `"${d.species}"`,
       `"${d.commonName}"`,
+      `"${d.localName || ""}"`,
       d.confidence,
       d.startTime,
       d.endTime,
