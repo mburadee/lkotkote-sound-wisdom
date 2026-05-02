@@ -24,12 +24,14 @@ const seasons = [
 const TEKAnnotationModal = ({ isOpen, speciesName, onClose, onSave }: Props) => {
   const [annotation, setAnnotation] = useState("");
   const [season, setSeason] = useState("");
+  const [localName, setLocalName] = useState("");
 
   const handleSave = () => {
     if (annotation.trim()) {
-      onSave(annotation.trim(), season);
+      onSave(annotation.trim(), season, localName.trim());
       setAnnotation("");
       setSeason("");
+      setLocalName("");
     }
   };
 
