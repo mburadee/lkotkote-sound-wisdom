@@ -138,11 +138,15 @@ const Index = () => {
     setTekModal({ open: true, detectionId: id });
   };
 
-  const handleSaveTEK = (annotation: string, season: string) => {
+  const handleSaveTEK = (annotation: string, season: string, localName: string) => {
     setDetections((prev) =>
       prev.map((d) =>
         d.id === tekModal.detectionId
-          ? { ...d, tekAnnotation: `${season ? `[${season}] ` : ""}${annotation}` }
+          ? {
+              ...d,
+              tekAnnotation: `${season ? `[${season}] ` : ""}${annotation}`,
+              localName: localName || d.localName,
+            }
           : d
       )
     );
