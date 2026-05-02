@@ -6,7 +6,7 @@ interface Props {
   isOpen: boolean;
   speciesName: string;
   onClose: () => void;
-  onSave: (annotation: string, season: string) => void;
+  onSave: (annotation: string, season: string, localName: string) => void;
 }
 
 const seasons = [
@@ -24,12 +24,14 @@ const seasons = [
 const TEKAnnotationModal = ({ isOpen, speciesName, onClose, onSave }: Props) => {
   const [annotation, setAnnotation] = useState("");
   const [season, setSeason] = useState("");
+  const [localName, setLocalName] = useState("");
 
   const handleSave = () => {
     if (annotation.trim()) {
-      onSave(annotation.trim(), season);
+      onSave(annotation.trim(), season, localName.trim());
       setAnnotation("");
       setSeason("");
+      setLocalName("");
     }
   };
 
@@ -88,6 +90,19 @@ const TEKAnnotationModal = ({ isOpen, speciesName, onClose, onSave }: Props) => 
                     </button>
                   ))}
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-body font-medium text-foreground mb-2">
+                  Local Name of Bird
+                </label>
+                <input
+                  type="text"
+                  value={localName}
+                  onChange={(e) => setLocalName(e.target.value)}
+                  placeholder="e.g. Lkotkote (Samburu), Kingoyongoyo (Swahili)"
+                  className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm font-body text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                />
               </div>
 
               <div>

@@ -10,6 +10,7 @@ export interface Detection {
   endTime: number;
   location?: string;
   tekAnnotation?: string;
+  localName?: string;
   thumbnailUrl?: string;
 }
 
@@ -66,6 +67,11 @@ const SpeciesResults = ({ detections, onAnnotate }: Props) => {
               <div className="flex-1 min-w-0">
                 <h3 className="font-display font-semibold text-lg text-foreground">
                   {d.commonName}
+                  {d.localName && (
+                    <span className="ml-2 text-sm font-body font-normal text-muted-foreground">
+                      · {d.localName}
+                    </span>
+                  )}
                 </h3>
                 <p className="text-sm font-body text-muted-foreground italic">{d.species}</p>
                 <div className="flex flex-wrap gap-4 mt-2 text-sm font-body text-muted-foreground">

@@ -75,17 +75,19 @@ function buildOccurrenceTsv(options: ExportOptions): string {
   const rows = options.detections.map((d) => {
     const confidence = `BirdNET confidence: ${(d.confidence * 100).toFixed(1)}%`;
     const tek = d.tekAnnotation || "";
+    const localPart = d.localName ? ` [Local name: ${d.localName}]` : "";
+    const vernacular = d.localName ? `${d.commonName} (${d.localName})` : d.commonName;
     return [
       d.id,
       "MachineObservation",
       d.species,
-      d.commonName,
+      vernacular,
       options.recordedDate || new Date().toISOString().split("T")[0],
       options.latitude || "",
       options.longitude || "",
       options.recordedBy || "Lkotkote User",
       confidence,
-      tek,
+      `${tek}${localPart}`,
       "",
     ].join("\t");
   });
@@ -104,12 +106,13 @@ export async function exportDarwinCore(options: ExportOptions): Promise<void> {
 }
 
 export function exportCSV(options: ExportOptions): void {
-  const header = "occurrenceID,scientificName,vernacularName,confidence,startTime,endTime,latitude,longitude,tekAnnotation";
+  const header = "occurrenceID,scientificName,vernacularName,localName,confidence,startTime,endTime,latitude,longitude,tekAnnotation";
   const rows = options.detections.map((d) =>
     [
       d.id,
       `"${d.species}"`,
       `"${d.commonName}"`,
+      `"${d.localName || ""}"`,
       d.confidence,
       d.startTime,
       d.endTime,
@@ -138,6 +141,7 @@ export function exportJSON(options: ExportOptions): void {
       basisOfRecord: "MachineObservation",
       scientificName: d.species,
       vernacularName: d.commonName,
+      localName: d.localName || null,
       confidence: d.confidence,
       startTime: d.startTime,
       endTime: d.endTime,
