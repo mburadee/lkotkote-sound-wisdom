@@ -24,7 +24,7 @@
 
 ---
 
-Lkotkote platform represents a new class of tools that bridge Indigenous knowledge systems with global biodiversity infrastructures.
+**Lkotkote platform represents a new class of tools that bridge Indigenous knowledge systems with global biodiversity infrastructures.**
 
 Lkotkote turns bird audio into ecological insight. Record or upload a clip, run it through the **BirdNET** acoustic model, plot detections on a timeline and map, capture **Traditional Ecological Knowledge (TEK)** annotations, and export in **Darwin Core** format for biodiversity research.
 
