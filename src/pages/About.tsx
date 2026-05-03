@@ -1,4 +1,4 @@
-import { Github, Mail, Bird, Globe, Sparkles, ShieldCheck } from "lucide-react";
+import { Github as GithubIcon, Mail, Bird, Globe, Sparkles, ShieldCheck } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Card, CardContent } from "@/components/ui/card";
 
