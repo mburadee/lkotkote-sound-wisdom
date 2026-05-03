@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { CloudRain, Skull, Users, Bird, Volume2, Loader2, ArrowLeft, Globe } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { SAMBURU_BIRDS, type SamburuBird } from "@/data/samburuTek";
 
@@ -239,6 +240,7 @@ const SamburuTEK = () => {
           </p>
         </div>
       </section>
+      <Footer />
     </div>
   );
 };
