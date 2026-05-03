@@ -1,4 +1,4 @@
-import { Github as GithubIcon, Mail, Bird, Globe, Sparkles, ShieldCheck } from "lucide-react";
+import { GitFork, Mail, Bird, Globe, Sparkles, ShieldCheck } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -137,7 +137,7 @@ const About = () => {
             >
               <Card className="border-sand bg-card/80 hover:border-savanna-amber transition-colors h-full">
                 <CardContent className="p-5 flex items-start gap-3">
-                  <Github className="w-6 h-6 text-foreground mt-1" />
+                  <GitFork className="w-6 h-6 text-foreground mt-1" />
                   <div>
                     <h3 className="font-display text-lg font-semibold">GitHub Repository</h3>
                     <p className="font-body text-sm text-muted-foreground break-all">
