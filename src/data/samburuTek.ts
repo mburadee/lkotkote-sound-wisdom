@@ -6,6 +6,8 @@ export interface SamburuBird {
   prediction: string;
   category: "weather" | "omen" | "social" | "predator";
   story: string;
+  localAudio?: string;
+  audioCredit?: string;
 }
 
 // Source: Field notes from Samburu community elders, Northern Kenya.
@@ -20,6 +22,8 @@ export const SAMBURU_BIRDS: SamburuBird[] = [
     category: "omen",
     story:
       "Its harsh nasal call is a sentinel for the herd — when Lkuak shouts from the acacia, warriors check the bush for predators or strangers approaching the manyatta.",
+    localAudio: "/sounds/white-bellied-go-away-bird.mp3",
+    audioCredit: "XC747720 · Xeno-canto",
   },
   {
     id: 2,
@@ -30,6 +34,8 @@ export const SAMBURU_BIRDS: SamburuBird[] = [
     category: "weather",
     story:
       "When colonies of Mairii start weaving frantically and chattering at dawn, elders prepare livestock — the rains are within days.",
+    localAudio: "/sounds/lesser-masked-weaver.mp3",
+    audioCredit: "XC449647 · Xeno-canto",
   },
   {
     id: 3,
@@ -40,6 +46,8 @@ export const SAMBURU_BIRDS: SamburuBird[] = [
     category: "omen",
     story:
       "The deep hoot of Lugut near a homestead is feared. Elders perform cleansing rituals; children are kept indoors until the bird departs.",
+    localAudio: "/sounds/verreauxs-eagle-owl.mp3",
+    audioCredit: "XC811860 · Xeno-canto",
   },
   {
     id: 4,
@@ -50,6 +58,8 @@ export const SAMBURU_BIRDS: SamburuBird[] = [
     category: "weather",
     story:
       "Chupaa migrates ahead of the monsoon. Its arrival call is the most reliable herald of the long rains across Samburu pastures.",
+    localAudio: "/sounds/pied-cuckoo.mp3",
+    audioCredit: "XC601197 · Xeno-canto",
   },
   {
     id: 5,
@@ -60,6 +70,8 @@ export const SAMBURU_BIRDS: SamburuBird[] = [
     category: "omen",
     story:
       "Circling Naraneho over a settlement is read as a sign of impending loss — historically a cue to check on the sick and elderly.",
+    localAudio: "/sounds/marabou-stork.mp3",
+    audioCredit: "XC300422 · Xeno-canto",
   },
   {
     id: 6,
@@ -80,6 +92,8 @@ export const SAMBURU_BIRDS: SamburuBird[] = [
     category: "omen",
     story:
       "The mournful coo of Nkutukuruk at dusk near a home is a traditional sign of grief approaching the family.",
+    localAudio: "/sounds/mourning-collared-dove.mp3",
+    audioCredit: "XC510412 · Xeno-canto",
   },
   {
     id: 8,
@@ -100,6 +114,8 @@ export const SAMBURU_BIRDS: SamburuBird[] = [
     category: "predator",
     story:
       "Lmagiro's silent glide overhead alerts herders to keep newborn lambs and kids close — it is a swift hunter of small livestock.",
+    localAudio: "/sounds/bateleur.wav",
+    audioCredit: "XC940363 · Xeno-canto",
   },
   {
     id: 10,
@@ -110,6 +126,8 @@ export const SAMBURU_BIRDS: SamburuBird[] = [
     category: "social",
     story:
       "Surpelei often nests on cliffs and rooftops. Its whistling song is welcomed — a sign the homestead is alive and well.",
+    localAudio: "/sounds/red-winged-starling.mp3",
+    audioCredit: "XC469078 · Xeno-canto",
   },
   {
     id: 11,
@@ -140,6 +158,8 @@ export const SAMBURU_BIRDS: SamburuBird[] = [
     category: "predator",
     story:
       "When Nkoilepo calls nearby, women rush to gather chickens — it raids domestic poultry with surgical speed.",
+    localAudio: "/sounds/gabar-goshawk.mp3",
+    audioCredit: "XC463627 · Xeno-canto",
   },
   {
     id: 14,
@@ -150,5 +170,7 @@ export const SAMBURU_BIRDS: SamburuBird[] = [
     category: "weather",
     story:
       "Low-flying Nkaiverei chasing insects above the riverbeds tells elders the wet season is fully open — time to move herds.",
+    localAudio: "/sounds/wire-tailed-swallow.mp3",
+    audioCredit: "XC366181 · Xeno-canto",
   },
 ];
