@@ -58,6 +58,8 @@ export const SAMBURU_BIRDS: SamburuBird[] = [
     category: "weather",
     story:
       "Chupaa migrates ahead of the monsoon. Its arrival call is the most reliable herald of the long rains across Samburu pastures.",
+    localAudio: "/sounds/pied-cuckoo.mp3",
+    audioCredit: "XC601197 · Xeno-canto",
   },
   {
     id: 5,
