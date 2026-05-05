@@ -170,5 +170,7 @@ export const SAMBURU_BIRDS: SamburuBird[] = [
     category: "weather",
     story:
       "Low-flying Nkaiverei chasing insects above the riverbeds tells elders the wet season is fully open — time to move herds.",
+    localAudio: "/sounds/wire-tailed-swallow.mp3",
+    audioCredit: "XC366181 · Xeno-canto",
   },
 ];
