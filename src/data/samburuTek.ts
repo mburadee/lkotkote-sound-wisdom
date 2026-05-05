@@ -6,6 +6,8 @@ export interface SamburuBird {
   prediction: string;
   category: "weather" | "omen" | "social" | "predator";
   story: string;
+  localAudio?: string;
+  audioCredit?: string;
 }
 
 // Source: Field notes from Samburu community elders, Northern Kenya.
