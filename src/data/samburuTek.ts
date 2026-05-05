@@ -158,6 +158,8 @@ export const SAMBURU_BIRDS: SamburuBird[] = [
     category: "predator",
     story:
       "When Nkoilepo calls nearby, women rush to gather chickens — it raids domestic poultry with surgical speed.",
+    localAudio: "/sounds/gabar-goshawk.mp3",
+    audioCredit: "XC463627 · Xeno-canto",
   },
   {
     id: 14,
