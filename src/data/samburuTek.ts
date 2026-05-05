@@ -92,6 +92,8 @@ export const SAMBURU_BIRDS: SamburuBird[] = [
     category: "omen",
     story:
       "The mournful coo of Nkutukuruk at dusk near a home is a traditional sign of grief approaching the family.",
+    localAudio: "/sounds/mourning-collared-dove.mp3",
+    audioCredit: "XC510412 · Xeno-canto",
   },
   {
     id: 8,
