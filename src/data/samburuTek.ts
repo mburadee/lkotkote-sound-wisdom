@@ -34,6 +34,8 @@ export const SAMBURU_BIRDS: SamburuBird[] = [
     category: "weather",
     story:
       "When colonies of Mairii start weaving frantically and chattering at dawn, elders prepare livestock — the rains are within days.",
+    localAudio: "/sounds/lesser-masked-weaver.mp3",
+    audioCredit: "XC449647 · Xeno-canto",
   },
   {
     id: 3,
