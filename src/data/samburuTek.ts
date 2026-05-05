@@ -70,6 +70,8 @@ export const SAMBURU_BIRDS: SamburuBird[] = [
     category: "omen",
     story:
       "Circling Naraneho over a settlement is read as a sign of impending loss — historically a cue to check on the sick and elderly.",
+    localAudio: "/sounds/marabou-stork.mp3",
+    audioCredit: "XC300422 · Xeno-canto",
   },
   {
     id: 6,
