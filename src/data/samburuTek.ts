@@ -114,6 +114,8 @@ export const SAMBURU_BIRDS: SamburuBird[] = [
     category: "predator",
     story:
       "Lmagiro's silent glide overhead alerts herders to keep newborn lambs and kids close — it is a swift hunter of small livestock.",
+    localAudio: "/sounds/bateleur.wav",
+    audioCredit: "XC940363 · Xeno-canto",
   },
   {
     id: 10,
