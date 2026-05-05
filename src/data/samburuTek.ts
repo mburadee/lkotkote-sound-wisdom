@@ -22,6 +22,8 @@ export const SAMBURU_BIRDS: SamburuBird[] = [
     category: "omen",
     story:
       "Its harsh nasal call is a sentinel for the herd — when Lkuak shouts from the acacia, warriors check the bush for predators or strangers approaching the manyatta.",
+    localAudio: "/sounds/white-bellied-go-away-bird.mp3",
+    audioCredit: "XC747720 · Xeno-canto",
   },
   {
     id: 2,
