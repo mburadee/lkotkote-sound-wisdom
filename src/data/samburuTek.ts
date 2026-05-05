@@ -126,6 +126,8 @@ export const SAMBURU_BIRDS: SamburuBird[] = [
     category: "social",
     story:
       "Surpelei often nests on cliffs and rooftops. Its whistling song is welcomed — a sign the homestead is alive and well.",
+    localAudio: "/sounds/red-winged-starling.mp3",
+    audioCredit: "XC469078 · Xeno-canto",
   },
   {
     id: 11,
