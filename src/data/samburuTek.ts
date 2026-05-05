@@ -46,6 +46,8 @@ export const SAMBURU_BIRDS: SamburuBird[] = [
     category: "omen",
     story:
       "The deep hoot of Lugut near a homestead is feared. Elders perform cleansing rituals; children are kept indoors until the bird departs.",
+    localAudio: "/sounds/verreauxs-eagle-owl.mp3",
+    audioCredit: "XC811860 · Xeno-canto",
   },
   {
     id: 4,
