@@ -4,6 +4,7 @@ import { CloudRain, Skull, Users, Bird, Volume2, Loader2, ArrowLeft, Globe } fro
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import BirdSoundPlayer from "@/components/BirdSoundPlayer";
 import { Card, CardContent } from "@/components/ui/card";
 import { SAMBURU_BIRDS, type SamburuBird } from "@/data/samburuTek";
 
