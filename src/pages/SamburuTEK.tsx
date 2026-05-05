@@ -103,7 +103,9 @@ const BirdCard = ({ bird, index }: { bird: Enriched; index: number }) => {
           <p className="text-sm font-body text-foreground/85 leading-relaxed mb-3">
             {bird.story}
           </p>
-          {bird.audioUrl ? (
+          {bird.localAudio ? (
+            <BirdSoundPlayer src={bird.localAudio} credit={bird.audioCredit} />
+          ) : bird.audioUrl ? (
             <div className="rounded-lg bg-muted/60 p-2 border border-border">
               <div className="flex items-center gap-1.5 mb-1.5 text-xs font-body text-muted-foreground">
                 <Volume2 className="w-3.5 h-3.5" />
