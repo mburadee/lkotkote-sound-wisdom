@@ -28,7 +28,7 @@
 
 Lkotkote turns bird audio into ecological insight. Record or upload a clip, run it through the **BirdNET** acoustic model, plot detections on a timeline and map, capture **Traditional Ecological Knowledge (TEK)** annotations, and export in **Darwin Core** format for biodiversity research.
 
-> 🔗 **Try it now:** **https://lkotkote.org**
+> 🔗 **Try it now:** **https://lkotkote.com**
 
 ---
 
@@ -44,7 +44,7 @@ Lkotkote turns bird audio into ecological insight. Record or upload a clip, run 
 ## 🚀 1 · Quick Start (Simple, Step-by-Step)
 
 ### Use it (no install)
-1. Open **https://lkotkote.org**
+1. Open **https://lkotkote.com**
 2. **Record** with your mic or **Upload** an audio file
 3. Set your **location** (search, map click, or GPS)
 4. Click **Analyze** — BirdNET identifies the species
