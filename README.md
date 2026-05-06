@@ -2,7 +2,7 @@
 
 <img src="docs/logo.png" alt="Lkotkote logo" width="140" />
 
-# Lkotkote — Sound Wisdom
+# Lkotkote — Listening to the land, with the people who know it best.
 
 ### *Bird sound identification powered by BirdNET, named after the Samburu word for the Eastern Yellow-billed Hornbill.*
 
