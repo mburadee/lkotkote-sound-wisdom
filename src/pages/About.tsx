@@ -154,7 +154,8 @@ const About = () => {
                   <Mail className="w-6 h-6 text-foreground mt-1" />
                   <div>
                     <h3 className="font-display text-lg font-semibold">Contact</h3>
-                    <p className="font-body text-sm text-muted-foreground break-all">douglas.mbura@gmail.com cc. nyaburi55@gmail.com</p>
+                    <p className="font-body text-sm text-muted-foreground break-all">douglas.mbura@gmail.com</p>
+                    <p className="font-body text-sm text-muted-foreground break-all">cc. nyaburi55@gmail.com</p>
                   </div>
                 </CardContent>
               </Card>
