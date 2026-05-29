@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Mic, Loader2 } from "lucide-react";
@@ -159,6 +160,14 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Lkotkote — Bioacoustic Intelligence Platform</title>
+        <meta name="description" content="Upload bird recordings and turn them into climate and ecological insights by blending AI bioacoustics with Traditional Ecological Knowledge." />
+        <link rel="canonical" href="https://lkotkote-sound-wisdom.lovable.app/" />
+        <meta property="og:title" content="Lkotkote — Bioacoustic Intelligence Platform" />
+        <meta property="og:description" content="Upload bird recordings and turn them into climate and ecological insights by blending AI bioacoustics with Traditional Ecological Knowledge." />
+        <meta property="og:url" content="https://lkotkote-sound-wisdom.lovable.app/" />
+      </Helmet>
       <Navbar />
       <div className={audioFile ? "block" : "hidden"}>
         <StepperNav current={current} completed={completed} onJump={handleJump} />

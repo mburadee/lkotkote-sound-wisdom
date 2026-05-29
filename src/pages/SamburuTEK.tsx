@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { CloudRain, Skull, Users, Bird, Volume2, Loader2, ArrowLeft, Globe } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -130,7 +131,6 @@ const SamburuTEK = () => {
   const [filter, setFilter] = useState<SamburuBird["category"] | "all">("all");
 
   useEffect(() => {
-    document.title = "Featured Sounds — Lkotkote";
     let cancelled = false;
     (async () => {
       const enriched = await Promise.all(
@@ -164,6 +164,29 @@ const SamburuTEK = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Featured Bird Sounds & Samburu TEK — Lkotkote</title>
+        <meta name="description" content="Explore Samburu Traditional Ecological Knowledge for featured bird species — their calls, seasonal meanings, and cultural significance in Northern Kenya." />
+        <link rel="canonical" href="https://lkotkote-sound-wisdom.lovable.app/tek" />
+        <meta property="og:title" content="Featured Bird Sounds & Samburu TEK — Lkotkote" />
+        <meta property="og:description" content="Explore Samburu Traditional Ecological Knowledge for featured bird species — their calls, seasonal meanings, and cultural significance." />
+        <meta property="og:url" content="https://lkotkote-sound-wisdom.lovable.app/tek" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: "Featured Bird Sounds & Samburu TEK",
+          url: "https://lkotkote-sound-wisdom.lovable.app/tek",
+          description: "Samburu Traditional Ecological Knowledge for featured bird species, including sounds and cultural meanings.",
+          mainEntity: {
+            "@type": "ItemList",
+            itemListElement: SAMBURU_BIRDS.map((b, i) => ({
+              "@type": "ListItem",
+              position: i + 1,
+              name: `${b.commonName} (${b.localName})`,
+            })),
+          },
+        })}</script>
+      </Helmet>
       <Navbar />
 
       <header className="pt-32 pb-12 bg-gradient-earth border-b border-border">
@@ -210,11 +233,15 @@ const SamburuTEK = () => {
             ))}
           </div>
 
+          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-6">
+            Featured species and their meanings
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {filtered.map((b, i) => (
               <BirdCard key={b.id} bird={b} index={i} />
             ))}
           </div>
+
 
           <div className="mt-16 p-6 rounded-xl bg-muted/50 border border-border">
             <h2 className="font-display text-2xl font-bold text-foreground mb-2">
