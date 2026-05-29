@@ -38,6 +38,7 @@ const HeroSection = ({ onGetStarted }: { onGetStarted: () => void }) => {
           className="text-5xl md:text-7xl lg:text-8xl font-display font-bold text-sand-light mb-6 leading-tight"
         >
           Lkotkote
+          <span className="sr-only"> — Bioacoustic Intelligence Platform</span>
         </motion.h1>
 
         <motion.p
@@ -78,7 +79,7 @@ const HeroSection = ({ onGetStarted }: { onGetStarted: () => void }) => {
             href="#how-it-works"
             className="inline-flex items-center gap-2 px-8 py-4 rounded-full border border-sand/30 font-body font-medium text-sand-light/80 hover:bg-sand/10 transition-colors"
           >
-            Learn More
+            Explore how Lkotkote works
           </a>
         </motion.div>
       </div>
