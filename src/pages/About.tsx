@@ -7,6 +7,21 @@ import { Card, CardContent } from "@/components/ui/card";
 const About = () => {
   return (
     <div className="min-h-screen bg-gradient-earth">
+      <Helmet>
+        <title>About Lkotkote — Bird Voices to Climate Intelligence</title>
+        <meta name="description" content="Learn how Lkotkote combines AI bioacoustics, Indigenous Traditional Ecological Knowledge, and GBIF to turn bird voices into climate intelligence." />
+        <link rel="canonical" href="https://lkotkote-sound-wisdom.lovable.app/about" />
+        <meta property="og:title" content="About Lkotkote — Bird Voices to Climate Intelligence" />
+        <meta property="og:description" content="Learn how Lkotkote combines AI bioacoustics, Indigenous Traditional Ecological Knowledge, and GBIF to turn bird voices into climate intelligence." />
+        <meta property="og:url" content="https://lkotkote-sound-wisdom.lovable.app/about" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "AboutPage",
+          name: "About Lkotkote",
+          url: "https://lkotkote-sound-wisdom.lovable.app/about",
+          description: "Lkotkote combines AI bioacoustics with Traditional Ecological Knowledge to turn bird voices into climate intelligence.",
+        })}</script>
+      </Helmet>
       <Navbar />
       <main className="container max-w-4xl mx-auto px-4 sm:px-6 pt-28 pb-20">
         <header className="mb-10">
