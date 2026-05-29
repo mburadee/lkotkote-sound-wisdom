@@ -1,0 +1,11 @@
+# Lkotkote
+
+> Lkotkote transforms bird sound recordings into climate and ecological insights by blending AI-powered bioacoustics with Traditional Ecological Knowledge (TEK).
+
+Lkotkote pairs BirdNET-Analyzer species detection with Indigenous community knowledge and GBIF-ready biodiversity data, turning bird calls into seasonal and climate signals while respecting Indigenous data sovereignty.
+
+## Pages
+
+- [Home](/): Upload bird recordings and turn them into AI + TEK ecological insights.
+- [Featured Sounds](/tek): Samburu Traditional Ecological Knowledge for featured bird species, with sounds and meanings.
+- [About](/about): What Lkotkote does, how it works, and how to get in touch.
