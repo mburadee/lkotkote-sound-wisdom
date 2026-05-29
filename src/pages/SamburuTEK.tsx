@@ -233,11 +233,15 @@ const SamburuTEK = () => {
             ))}
           </div>
 
+          <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-6">
+            Featured species and their meanings
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {filtered.map((b, i) => (
               <BirdCard key={b.id} bird={b} index={i} />
             ))}
           </div>
+
 
           <div className="mt-16 p-6 rounded-xl bg-muted/50 border border-border">
             <h2 className="font-display text-2xl font-bold text-foreground mb-2">
