@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { CloudRain, Skull, Users, Bird, Volume2, Loader2, ArrowLeft, Globe } from "lucide-react";
 import { Link } from "react-router-dom";
