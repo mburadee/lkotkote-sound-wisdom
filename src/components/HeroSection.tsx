@@ -12,6 +12,7 @@ const HeroSection = ({ onGetStarted }: { onGetStarted: () => void }) => {
           className="w-full h-full object-cover"
           width={1920}
           height={1080}
+          fetchPriority="high"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-foreground/60 via-foreground/40 to-foreground/80" />
       </div>
