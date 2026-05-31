@@ -48,8 +48,7 @@ const HeroSection = ({ onGetStarted }: { onGetStarted: () => void }) => {
           transition={{ duration: 0.8, delay: 0.4 }}
           className="text-lg md:text-xl font-body text-sand/90 max-w-2xl mx-auto mb-4 leading-relaxed"
         >
-          Transform bird sound recordings into climate and ecological insights
-          by blending AI-powered bioacoustics with Traditional Ecological Knowledge.
+          Advancing biodiversity monitoring through bioacoustics and Indigenous-led knowledge systems to better understand ecosystems, seasons, and climate change.
         </motion.p>
 
         <motion.div
