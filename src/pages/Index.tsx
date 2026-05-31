@@ -162,10 +162,10 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Helmet>
         <title>Lkotkote — Bioacoustic Intelligence Platform</title>
-        <meta name="description" content="Upload bird recordings and turn them into climate and ecological insights by blending AI bioacoustics with Traditional Ecological Knowledge." />
+        <meta name="description" content="Advancing biodiversity monitoring through bioacoustics and Indigenous-led knowledge systems to better understand ecosystems, seasons, and climate change." />
         <link rel="canonical" href="https://lkotkote-sound-wisdom.lovable.app/" />
         <meta property="og:title" content="Lkotkote — Bioacoustic Intelligence Platform" />
-        <meta property="og:description" content="Upload bird recordings and turn them into climate and ecological insights by blending AI bioacoustics with Traditional Ecological Knowledge." />
+        <meta property="og:description" content="Advancing biodiversity monitoring through bioacoustics and Indigenous-led knowledge systems to better understand ecosystems, seasons, and climate change." />
         <meta property="og:url" content="https://lkotkote-sound-wisdom.lovable.app/" />
       </Helmet>
       <Navbar />
