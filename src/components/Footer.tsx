@@ -14,7 +14,7 @@ const Footer = () => (
         <span className="font-display font-bold text-lg text-foreground">Lkotkote</span>
       </div>
       <p className="text-sm font-body text-muted-foreground max-w-2xl">
-        © 2026 Lkotkote — Bridging bioacoustics and Traditional Ecological Knowledge for climate resilience.
+        © 2026 Lkotkote — Birds have stories. Indigenous knowledge helps us understand them.
       </p>
     </div>
   </footer>
