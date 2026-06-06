@@ -163,10 +163,10 @@ const Index = () => {
       <Helmet>
         <title>Lkotkote — Bioacoustic Intelligence Platform</title>
         <meta name="description" content="Advancing biodiversity monitoring through bioacoustics and Indigenous-led knowledge systems to better understand ecosystems, seasons, and climate change." />
-        <link rel="canonical" href="https://lkotkote-sound-wisdom.lovable.app/" />
+        <link rel="canonical" href="https://lkotkote.com/" />
         <meta property="og:title" content="Lkotkote — Bioacoustic Intelligence Platform" />
         <meta property="og:description" content="Advancing biodiversity monitoring through bioacoustics and Indigenous-led knowledge systems to better understand ecosystems, seasons, and climate change." />
-        <meta property="og:url" content="https://lkotkote-sound-wisdom.lovable.app/" />
+        <meta property="og:url" content="https://lkotkote.com/" />
       </Helmet>
       <Navbar />
       <div className={audioFile ? "block" : "hidden"}>

@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://lkotkote-sound-wisdom.lovable.app/sitemap.xml
+Sitemap: https://lkotkote.com/sitemap.xml

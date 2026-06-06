@@ -10,15 +10,15 @@ const About = () => {
       <Helmet>
         <title>About Lkotkote — Bird Voices to Climate Intelligence</title>
         <meta name="description" content="Learn how Lkotkote combines AI bioacoustics, Indigenous Traditional Ecological Knowledge, and GBIF to turn bird voices into climate intelligence." />
-        <link rel="canonical" href="https://lkotkote-sound-wisdom.lovable.app/about" />
+        <link rel="canonical" href="https://lkotkote.com/about" />
         <meta property="og:title" content="About Lkotkote — Bird Voices to Climate Intelligence" />
         <meta property="og:description" content="Learn how Lkotkote combines AI bioacoustics, Indigenous Traditional Ecological Knowledge, and GBIF to turn bird voices into climate intelligence." />
-        <meta property="og:url" content="https://lkotkote-sound-wisdom.lovable.app/about" />
+        <meta property="og:url" content="https://lkotkote.com/about" />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "AboutPage",
           name: "About Lkotkote",
-          url: "https://lkotkote-sound-wisdom.lovable.app/about",
+          url: "https://lkotkote.com/about",
           description: "Lkotkote combines AI bioacoustics with Traditional Ecological Knowledge to turn bird voices into climate intelligence.",
         })}</script>
       </Helmet>
