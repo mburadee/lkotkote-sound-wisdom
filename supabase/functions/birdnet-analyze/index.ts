@@ -5,6 +5,8 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+const MAX_AUDIO_BYTES = 50 * 1024 * 1024; // 50MB
+
 interface BirdNetSegment {
   start: number;
   end: number;
@@ -22,6 +24,18 @@ interface NormalizedDetection {
   endTime: number;
 }
 
+// Clamp a numeric form value within [min, max], falling back to a default.
+function clampNumber(
+  value: FormDataEntryValue | null,
+  min: number,
+  max: number,
+  fallback: number,
+): number {
+  const n = parseFloat(value?.toString() ?? "");
+  if (!Number.isFinite(n)) return fallback;
+  return Math.max(min, Math.min(max, n));
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -30,8 +44,9 @@ Deno.serve(async (req) => {
   try {
     const BIRDNET_SERVER_URL = Deno.env.get("BIRDNET_SERVER_URL");
     if (!BIRDNET_SERVER_URL) {
+      console.error("BIRDNET_SERVER_URL is not configured");
       return new Response(
-        JSON.stringify({ error: "BIRDNET_SERVER_URL is not configured" }),
+        JSON.stringify({ error: "Service is temporarily unavailable." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
@@ -45,10 +60,31 @@ Deno.serve(async (req) => {
       );
     }
 
-    const lat = inboundForm.get("lat")?.toString() ?? "-1";
-    const lon = inboundForm.get("lon")?.toString() ?? "-1";
-    const week = inboundForm.get("week")?.toString() ?? "-1";
-    const minConf = inboundForm.get("min_conf")?.toString() ?? "0.1";
+    // --- Server-side input validation ---
+    if (audio.size === 0) {
+      return new Response(
+        JSON.stringify({ error: "Uploaded audio file is empty." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    if (audio.size > MAX_AUDIO_BYTES) {
+      return new Response(
+        JSON.stringify({ error: "Audio file exceeds the 50MB limit." }),
+        { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    const audioType = (audio.type || "").toLowerCase();
+    if (audioType && !audioType.startsWith("audio/")) {
+      return new Response(
+        JSON.stringify({ error: "Uploaded file must be an audio file." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    const lat = clampNumber(inboundForm.get("lat"), -90, 90, -1).toString();
+    const lon = clampNumber(inboundForm.get("lon"), -180, 180, -1).toString();
+    const week = Math.round(clampNumber(inboundForm.get("week"), -1, 52, -1)).toString();
+    const minConf = clampNumber(inboundForm.get("min_conf"), 0, 1, 0.1).toString();
 
     const upstreamForm = new FormData();
     upstreamForm.append("file", audio, audio.name);
@@ -71,10 +107,7 @@ Deno.serve(async (req) => {
     if (!upstreamRes.ok) {
       console.error("BirdNET upstream HTTP error", upstreamRes.status, text);
       return new Response(
-        JSON.stringify({
-          error: `BirdNET server returned ${upstreamRes.status}`,
-          details: text.slice(0, 500),
-        }),
+        JSON.stringify({ error: "BirdNET analysis failed. Please try again." }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
@@ -83,26 +116,20 @@ Deno.serve(async (req) => {
     try {
       raw = JSON.parse(text);
     } catch {
+      console.error("BirdNET server returned non-JSON response");
       return new Response(
-        JSON.stringify({ error: "BirdNET server returned non-JSON response" }),
+        JSON.stringify({ error: "BirdNET analysis failed. Please try again." }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
     const r = raw as Record<string, unknown>;
 
-    // Surface upstream-reported processing errors
+    // Surface upstream-reported processing errors (logged server-side only)
     if (r.status === "error") {
       console.error("BirdNET upstream processing error", r);
       return new Response(
-        JSON.stringify({
-          error: "BirdNET processing failed on the server",
-          details: typeof r.message === "string"
-            ? r.message
-            : typeof r.stderr === "string"
-              ? r.stderr
-              : JSON.stringify(r).slice(0, 500),
-        }),
+        JSON.stringify({ error: "BirdNET analysis failed. Please try again." }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
@@ -155,8 +182,7 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     console.error("birdnet-analyze error:", err);
-    const msg = err instanceof Error ? err.message : "Unknown error";
-    return new Response(JSON.stringify({ error: msg }), {
+    return new Response(JSON.stringify({ error: "An unexpected error occurred." }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
