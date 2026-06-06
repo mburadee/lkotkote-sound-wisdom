@@ -167,15 +167,15 @@ const SamburuTEK = () => {
       <Helmet>
         <title>Featured Bird Sounds & Samburu TEK — Lkotkote</title>
         <meta name="description" content="Explore Samburu Traditional Ecological Knowledge for featured bird species — their calls, seasonal meanings, and cultural significance in Northern Kenya." />
-        <link rel="canonical" href="https://lkotkote-sound-wisdom.lovable.app/tek" />
+        <link rel="canonical" href="https://lkotkote.com/tek" />
         <meta property="og:title" content="Featured Bird Sounds & Samburu TEK — Lkotkote" />
         <meta property="og:description" content="Explore Samburu Traditional Ecological Knowledge for featured bird species — their calls, seasonal meanings, and cultural significance." />
-        <meta property="og:url" content="https://lkotkote-sound-wisdom.lovable.app/tek" />
+        <meta property="og:url" content="https://lkotkote.com/tek" />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "CollectionPage",
           name: "Featured Bird Sounds & Samburu TEK",
-          url: "https://lkotkote-sound-wisdom.lovable.app/tek",
+          url: "https://lkotkote.com/tek",
           description: "Samburu Traditional Ecological Knowledge for featured bird species, including sounds and cultural meanings.",
           mainEntity: {
             "@type": "ItemList",
