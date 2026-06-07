@@ -5,7 +5,7 @@ import logo from "@/assets/logo.png";
 const links = [
   { href: "/#how-it-works", label: "How It Works" },
   { href: "/tek", label: "Featured Sounds" },
-  { href: "/#upload", label: "Upload" },
+  { href: "/map", label: "Sounds Map" },
   { href: "/about", label: "About" },
 ];
 
