@@ -4,11 +4,13 @@ export interface SamburuBird {
   scientificName: string;
   localName: string;
   prediction: string;
-  category: "weather" | "omen" | "social" | "predator";
+  category: "weather" | "omen" | "social" | "predator" | "endangered";
   story: string;
   localAudio?: string;
   audioCredit?: string;
+  iucnStatus?: "LC" | "NT" | "VU" | "EN" | "CR";
 }
+
 
 // Source: Field notes from Samburu community elders, Northern Kenya.
 // Traditional Ecological Knowledge (TEK) — bird sounds as ecological & social indicators.
@@ -173,4 +175,39 @@ export const SAMBURU_BIRDS: SamburuBird[] = [
     localAudio: "/sounds/wire-tailed-swallow.mp3",
     audioCredit: "XC366181 · Xeno-canto",
   },
+  {
+
+    id: 15,
+    commonName: "White-backed Vulture",
+    scientificName: "Gyps africanus",
+    localName: "Lmotonyi loibor",
+    prediction: "Cleanser of the plains",
+    category: "endangered",
+    iucnStatus: "CR",
+    story:
+      "Lmotonyi soars in wide, silent circles marking where a carcass lies. Elders once followed these spirals to locate lost livestock. Its collapse from poisoning is felt across Samburu — the plains grow slower to heal.",
+  },
+  {
+    id: 16,
+    commonName: "Rüppell's Griffon Vulture",
+    scientificName: "Gyps rueppelli",
+    localName: "Lmotonyi lorok",
+    prediction: "Sky-elder, storm reader",
+    category: "endangered",
+    iucnStatus: "CR",
+    story:
+      "The highest-flying bird ever recorded. Samburu warriors watch its climb — a Griffon riding high thermals foretells settled, cloudless days. Its disappearance from Loisaba escarpments alarms the community.",
+  },
+  {
+    id: 17,
+    commonName: "Hooded Vulture",
+    scientificName: "Necrosyrtes monachus",
+    localName: "Lmotonyi kiti",
+    prediction: "Camp-keeper, warning of sickness",
+    category: "endangered",
+    iucnStatus: "CR",
+    story:
+      "The small hooded vulture haunted the edges of manyattas, cleaning bones and hides. When it stopped appearing, elders warned of environmental sickness — a prophecy borne out by continent-wide vulture collapse.",
+  },
 ];
+

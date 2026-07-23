@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
-import { CloudRain, Skull, Users, Bird, Volume2, Loader2, ArrowLeft, Globe } from "lucide-react";
+import { CloudRain, Skull, Users, Bird, Volume2, Loader2, ArrowLeft, Globe, AlertTriangle } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -19,7 +19,9 @@ const CATEGORY_META: Record<
   omen: { label: "Omen", icon: Skull, className: "bg-earth-brown/20 text-earth-brown border-earth-brown/30" },
   social: { label: "Social", icon: Users, className: "bg-forest-green/20 text-forest-green border-forest-green/30" },
   predator: { label: "Predator", icon: Bird, className: "bg-savanna-amber/20 text-savanna-amber border-savanna-amber/40" },
+  endangered: { label: "Critically Endangered", icon: AlertTriangle, className: "bg-red-500/15 text-red-600 border-red-500/40" },
 };
+
 
 async function fetchWikiThumb(name: string): Promise<string | undefined> {
   try {
