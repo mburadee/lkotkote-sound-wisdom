@@ -4,11 +4,13 @@ export interface SamburuBird {
   scientificName: string;
   localName: string;
   prediction: string;
-  category: "weather" | "omen" | "social" | "predator";
+  category: "weather" | "omen" | "social" | "predator" | "endangered";
   story: string;
   localAudio?: string;
   audioCredit?: string;
+  iucnStatus?: "LC" | "NT" | "VU" | "EN" | "CR";
 }
+
 
 // Source: Field notes from Samburu community elders, Northern Kenya.
 // Traditional Ecological Knowledge (TEK) — bird sounds as ecological & social indicators.
