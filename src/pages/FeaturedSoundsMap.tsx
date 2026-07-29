@@ -1,57 +1,94 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Popup,
-  LayersControl,
-  Circle,
-  useMap,
-} from "react-leaflet";
-import MarkerClusterGroup from "react-leaflet-cluster";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Bird, Globe, Volume2, AlertTriangle, MapPin, Feather } from "lucide-react";
+import { ArrowLeft, Bird, Volume2, AlertTriangle } from "lucide-react";
 
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BirdSoundPlayer from "@/components/BirdSoundPlayer";
 import { SAMBURU_BIRDS, type SamburuBird } from "@/data/samburuTek";
 
-// Namunyak Conservancy, Northern Kenya
-const NAMUNYAK: [number, number] = [0.9453087, 37.4025396];
+// Kenya center + tight bounds for a national editorial map view
+const KENYA_CENTER: [number, number] = [0.6, 37.9];
+const KENYA_BOUNDS: L.LatLngBoundsLiteral = [
+  [-4.9, 33.7],
+  [5.2, 42.1],
+];
 
+type Sample = { id: string; birdId: number; lat: number; lon: number; abundance: number };
 type Enriched = SamburuBird & {
-  lat: number;
-  lon: number;
   thumbnailUrl?: string;
   audioUrl?: string;
   recordist?: string;
 };
 
-// Category → color + label (design-token adjacent HSL values used in tokens.css)
+// Editorial palette — mirrors the reference map (muted red / blue / green)
 const CAT_STYLE: Record<
   SamburuBird["category"],
-  { color: string; ring: string; label: string; glyph: string }
+  { color: string; label: string }
 > = {
-  weather: { color: "#3b82c4", ring: "#3b82c4", label: "Weather reader", glyph: "☁" },
-  omen: { color: "#7a4a2a", ring: "#7a4a2a", label: "Omen keeper", glyph: "☾" },
-  social: { color: "#4e8a3e", ring: "#4e8a3e", label: "Community bird", glyph: "◈" },
-  predator: { color: "#d97706", ring: "#d97706", label: "Predator", glyph: "▲" },
-  endangered: { color: "#dc2626", ring: "#dc2626", label: "Critically endangered", glyph: "✦" },
+  endangered: { color: "#d64545", label: "Critically endangered" },
+  predator: { color: "#c98a2b", label: "Predator" },
+  weather: { color: "#3a76b8", label: "Weather reader" },
+  omen: { color: "#6b4a2a", label: "Omen keeper" },
+  social: { color: "#3f7a3a", label: "Community bird" },
 };
 
-// Deterministic pseudo-random offset so markers stay put between renders.
-function seededOffset(seed: number, spread = 0.7) {
-  const rand = (n: number) => {
-    const x = Math.sin(seed * 99.13 + n * 7.71) * 43758.5453;
-    return x - Math.floor(x);
-  };
-  const lat = NAMUNYAK[0] + (rand(1) - 0.5) * spread;
-  const lon = NAMUNYAK[1] + (rand(2) - 0.5) * spread;
-  return { lat, lon };
+// Seeded PRNG so dots are stable between renders
+function rand(seed: number, n: number) {
+  const x = Math.sin(seed * 99.13 + n * 7.71) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+// Regional bias per bird category so each species reads as a range map.
+// Values are rough Kenyan biogeographic zones (northern arid, central highlands,
+// coastal, western lakes) — purely illustrative.
+const REGION_BIAS: Record<SamburuBird["category"], Array<[number, number, number]>> = {
+  // [lat, lon, spread]
+  endangered: [
+    [1.6, 36.3, 1.4], // northern rift / Samburu
+    [-1.5, 37.2, 1.2], // Nairobi + Athi plains
+    [2.6, 40.0, 1.4], // north-east
+  ],
+  predator: [
+    [0.5, 37.4, 2.0],
+    [-2.5, 38.5, 1.5],
+  ],
+  weather: [
+    [0.0, 37.0, 2.4],
+    [-3.5, 39.8, 1.2], // coast
+  ],
+  omen: [
+    [0.9, 37.6, 2.0],
+    [-0.5, 35.5, 1.4], // western highlands
+  ],
+  social: [
+    [0.6, 37.8, 2.4],
+    [-1.2, 36.9, 1.4],
+    [-3.5, 39.7, 1.0],
+  ],
+};
+
+function generateSamples(bird: SamburuBird): Sample[] {
+  const regions = REGION_BIAS[bird.category];
+  const perRegion = bird.category === "endangered" ? 6 : 4;
+  const samples: Sample[] = [];
+  regions.forEach((r, ri) => {
+    for (let i = 0; i < perRegion; i++) {
+      const rx = rand(bird.id * 13 + ri * 5, i * 3 + 1) - 0.5;
+      const ry = rand(bird.id * 17 + ri * 7, i * 3 + 2) - 0.5;
+      const lat = r[0] + rx * r[2];
+      const lon = r[1] + ry * r[2];
+      // clamp to Kenya
+      if (lat < -4.7 || lat > 5.0 || lon < 33.9 || lon > 41.9) continue;
+      const abundance = 0.35 + rand(bird.id, i * 5 + ri) * 0.65; // 0.35 – 1
+      samples.push({ id: `${bird.id}-${ri}-${i}`, birdId: bird.id, lat, lon, abundance });
+    }
+  });
+  return samples;
 }
 
 async function fetchWikiThumb(name: string): Promise<string | undefined> {
@@ -80,37 +117,24 @@ async function fetchXenoCanto(scientific: string): Promise<{ url?: string; recor
   }
 }
 
-// Build a stylised bird-dot divIcon. Endangered species get a pulsing halo.
-function buildIcon(cat: SamburuBird["category"]) {
-  const s = CAT_STYLE[cat];
-  const pulse = cat === "endangered";
-  const size = pulse ? 40 : 30;
-  const html = `
-    <div style="position:relative;width:${size}px;height:${size}px;">
-      ${
-        pulse
-          ? `<span style="position:absolute;inset:0;border-radius:9999px;background:${s.color};opacity:.35;animation:lkPulse 1.8s ease-out infinite;"></span>`
-          : ""
-      }
-      <div style="
-        position:absolute;inset:${pulse ? "6px" : "2px"};
-        border-radius:9999px;
-        background:radial-gradient(circle at 30% 30%, #fff8, ${s.color} 60%, ${s.color});
-        border:2px solid #fff;
-        box-shadow:0 2px 6px rgba(0,0,0,.35), 0 0 0 2px ${s.color}44;
-        display:flex;align-items:center;justify-content:center;
-        color:#fff;font:700 12px/1 system-ui;">${s.glyph}</div>
-    </div>`;
+// Small, flat coloured dot — matches the editorial reference map exactly.
+function dotIcon(color: string, abundance: number) {
+  const size = Math.round(6 + abundance * 8); // 6 → 14 px
+  const html = `<div style="
+    width:${size}px;height:${size}px;border-radius:9999px;
+    background:${color};
+    border:1px solid rgba(255,255,255,.85);
+    box-shadow:0 0 0 0.5px rgba(0,0,0,.25);
+  "></div>`;
   return L.divIcon({
     html,
-    className: "lk-marker",
+    className: "lk-dot",
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
     popupAnchor: [0, -size / 2],
   });
 }
 
-// Small helper component that lets outside buttons control the map.
 const MapController = ({ target }: { target: [number, number, number] | null }) => {
   const map = useMap();
   useEffect(() => {
@@ -129,13 +153,13 @@ const BirdPopup = ({ bird }: { bird: Enriched }) => {
           <img
             src={bird.thumbnailUrl}
             alt={`${bird.commonName} (${bird.localName})`}
-            className="w-16 h-16 rounded-full object-cover ring-2 shrink-0"
+            className="w-16 h-16 rounded-full object-cover shrink-0"
             style={{ boxShadow: `0 0 0 2px ${s.color}66` }}
             width={64}
             height={64}
           />
         ) : (
-          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center ring-2 ring-border shrink-0">
+          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center shrink-0">
             <Bird className="w-6 h-6 text-muted-foreground" />
           </div>
         )}
@@ -178,22 +202,19 @@ const BirdPopup = ({ bird }: { bird: Enriched }) => {
 };
 
 const FeaturedSoundsMap = () => {
-  const initial = useMemo<Enriched[]>(
-    () =>
-      SAMBURU_BIRDS.map((b) => ({
-        ...b,
-        // Endangered vultures cluster tighter to the escarpments; others spread wider.
-        ...seededOffset(b.id, b.category === "endangered" ? 0.35 : 0.75),
-      })),
-    [],
-  );
-  const [birds, setBirds] = useState<Enriched[]>(initial);
+  const [birds, setBirds] = useState<Enriched[]>(SAMBURU_BIRDS);
   const [ready, setReady] = useState(false);
   const [target, setTarget] = useState<[number, number, number] | null>(null);
   const [activeCats, setActiveCats] = useState<Set<SamburuBird["category"]>>(
     new Set(["weather", "omen", "social", "predator", "endangered"]),
   );
-  const markerRefs = useRef<Record<number, L.Marker | null>>({});
+
+  const samples = useMemo(() => SAMBURU_BIRDS.flatMap(generateSamples), []);
+  const birdMap = useMemo(() => {
+    const m = new Map<number, Enriched>();
+    birds.forEach((b) => m.set(b.id, b));
+    return m;
+  }, [birds]);
 
   useEffect(() => {
     const id = window.requestAnimationFrame(() => setReady(true));
@@ -204,7 +225,7 @@ const FeaturedSoundsMap = () => {
     let cancelled = false;
     (async () => {
       const enriched = await Promise.all(
-        initial.map(async (b) => {
+        SAMBURU_BIRDS.map(async (b) => {
           const [thumb, audio] = await Promise.all([
             fetchWikiThumb(b.commonName),
             fetchXenoCanto(b.scientificName),
@@ -217,10 +238,12 @@ const FeaturedSoundsMap = () => {
     return () => {
       cancelled = true;
     };
-  }, [initial]);
+  }, []);
 
-  const visible = birds.filter((b) => activeCats.has(b.category));
-  const endangeredCount = birds.filter((b) => b.category === "endangered").length;
+  const visibleSamples = samples.filter((s) => {
+    const b = birdMap.get(s.birdId);
+    return b && activeCats.has(b.category);
+  });
 
   const toggleCat = (c: SamburuBird["category"]) => {
     setActiveCats((prev) => {
@@ -231,382 +254,205 @@ const FeaturedSoundsMap = () => {
     });
   };
 
-  const flyTo = (b: Enriched) => {
-    setTarget([b.lat, b.lon, 12]);
-    setTimeout(() => {
-      markerRefs.current[b.id]?.openPopup();
-    }, 900);
+  const endangered = birds.filter((b) => b.category === "endangered");
+
+  const flyToBird = (b: Enriched) => {
+    const first = samples.find((s) => s.birdId === b.id);
+    if (first) setTarget([first.lat, first.lon, 8]);
   };
 
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>Sounds Map — Featured Birds of Namunyak · Lkotkote</title>
+        <title>Sounds Map — Featured Birds of Kenya · Lkotkote</title>
         <meta
           name="description"
-          content="An interactive bioacoustic atlas of Namunyak Conservancy. Explore 17 featured birds — including three critically endangered vultures — with calls, waveforms, and Samburu Traditional Ecological Knowledge."
+          content="An editorial bioacoustic atlas of Kenya. Explore 17 featured birds — including three critically endangered vultures — with calls, waveforms, and Samburu Traditional Ecological Knowledge."
         />
         <link rel="canonical" href="https://lkotkote.com/map" />
         <meta property="og:title" content="Sounds Map — Lkotkote" />
-        <meta
-          property="og:description"
-          content="Bioacoustic atlas of Namunyak Conservancy with 17 featured birds and 3 critically endangered vultures."
-        />
         <meta property="og:url" content="https://lkotkote.com/map" />
         <style>{`
-          @keyframes lkPulse { 0% { transform:scale(.6); opacity:.6 } 100% { transform:scale(1.8); opacity:0 } }
           .leaflet-popup-content-wrapper { border-radius: 14px; }
           .leaflet-popup-content { margin: 12px 14px; }
+          .lk-editorial .leaflet-container { background: #f4f1ea; font-family: 'Source Sans 3', sans-serif; }
         `}</style>
       </Helmet>
       <Navbar />
 
-      {/* Cinematic hero */}
-      <header className="relative pt-32 pb-14 overflow-hidden border-b border-border">
-        <div
-          className="absolute inset-0 opacity-[0.18] pointer-events-none"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 20% 30%, hsl(var(--forest-green)) 0, transparent 40%), radial-gradient(circle at 80% 60%, hsl(var(--savanna-amber)) 0, transparent 45%), radial-gradient(circle at 50% 90%, #dc262655 0, transparent 40%)",
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-earth" />
-        <div className="relative container max-w-6xl mx-auto px-6">
+      <section className="pt-24 pb-8 bg-[#f4f1ea]">
+        <div className="container max-w-[1400px] mx-auto px-6">
           <Link
             to="/"
-            className="inline-flex items-center gap-1.5 text-sm font-body text-muted-foreground hover:text-foreground transition-colors mb-6"
+            className="inline-flex items-center gap-1.5 text-sm font-body text-muted-foreground hover:text-foreground transition-colors mb-4"
           >
             <ArrowLeft className="w-4 h-4" /> Back to home
           </Link>
-          <div className="grid md:grid-cols-[1.6fr_1fr] gap-8 items-end">
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-savanna-gold/15 border border-savanna-gold/40 mb-4">
-                <Globe className="w-3.5 h-3.5 text-savanna-amber" />
-                <span className="text-xs font-body font-medium text-savanna-amber tracking-wide">
-                  Namunyak Conservancy · Northern Kenya · 0.945° N, 37.402° E
-                </span>
-              </div>
-              <h1 className="text-4xl md:text-6xl font-display font-bold text-foreground leading-[1.05] mb-4">
-                A bioacoustic atlas
-                <span className="block text-forest-green">of a living landscape</span>
+
+          {/* Editorial map canvas */}
+          <div className="lk-editorial relative rounded-lg overflow-hidden border border-black/10 bg-[#f4f1ea] shadow-[0_20px_60px_-30px_rgba(0,0,0,0.35)] h-[820px]">
+            {ready && (
+              <MapContainer
+                center={KENYA_CENTER}
+                zoom={6}
+                minZoom={5}
+                maxZoom={10}
+                scrollWheelZoom
+                zoomControl={false}
+                attributionControl={false}
+                maxBounds={KENYA_BOUNDS}
+                className="h-full w-full"
+              >
+                {/* Pale editorial base (CartoDB Positron) */}
+                <TileLayer
+                  attribution="&copy; OpenStreetMap contributors &copy; CARTO"
+                  url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
+                  maxZoom={19}
+                />
+                <TileLayer
+                  attribution=""
+                  url="https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png"
+                  maxZoom={19}
+                />
+
+                <MapController target={target} />
+
+                {visibleSamples.map((s) => {
+                  const b = birdMap.get(s.birdId)!;
+                  const st = CAT_STYLE[b.category];
+                  return (
+                    <Marker
+                      key={s.id}
+                      position={[s.lat, s.lon]}
+                      icon={dotIcon(st.color, s.abundance)}
+                    >
+                      <Popup minWidth={280} maxWidth={320}>
+                        <BirdPopup bird={b} />
+                      </Popup>
+                    </Marker>
+                  );
+                })}
+              </MapContainer>
+            )}
+
+            {/* Editorial title — top-left */}
+            <div className="absolute top-6 left-6 z-[400] max-w-[520px] pointer-events-none">
+              <h1 className="font-display font-bold text-foreground text-4xl md:text-5xl leading-[1.05] tracking-tight m-0">
+                Featured Birds of Kenya
               </h1>
-              <p className="text-lg font-body text-foreground/80 max-w-2xl leading-relaxed">
-                Every dot is a voice. Tap a marker to hear the bird, read its Samburu meaning, and
-                see the sound-graph of its call. Red pulses mark <strong>critically endangered
-                vultures</strong> whose disappearance the elders warned us about first.
+              <p className="font-body text-foreground/70 text-base md:text-lg mt-2 leading-snug">
+                Occurrence &amp; relative abundance across Kenya
               </p>
-              <div className="mt-6 grid grid-cols-3 gap-3 max-w-lg">
-                {[
-                  { k: "Species", v: birds.length, icon: Feather },
-                  { k: "Critically endangered", v: endangeredCount, icon: AlertTriangle },
-                  { k: "Sample points", v: birds.length, icon: MapPin },
-                ].map(({ k, v, icon: I }) => (
-                  <div
-                    key={k}
-                    className="rounded-xl bg-card/70 backdrop-blur border border-border px-3 py-3"
-                  >
-                    <I className="w-4 h-4 text-forest-green mb-1.5" />
-                    <div className="text-2xl font-display font-bold text-foreground leading-none">
-                      {v}
-                    </div>
-                    <div className="text-[11px] font-body text-muted-foreground mt-1">{k}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Legend card */}
-            <div className="rounded-2xl bg-card/85 backdrop-blur border border-border p-5 shadow-warm">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-display font-bold text-foreground tracking-wide uppercase">
-                  Legend
-                </h2>
-                <span className="text-[10px] font-body text-muted-foreground">Click to filter</span>
-              </div>
-              <ul className="space-y-2">
-                {(Object.keys(CAT_STYLE) as SamburuBird["category"][]).map((c) => {
-                  const s = CAT_STYLE[c];
-                  const active = activeCats.has(c);
-                  const count = birds.filter((b) => b.category === c).length;
-                  return (
-                    <li key={c}>
-                      <button
-                        onClick={() => toggleCat(c)}
-                        className={`w-full flex items-center gap-3 text-left px-2 py-1.5 rounded-lg transition-all ${
-                          active ? "bg-muted/60" : "opacity-40 hover:opacity-70"
-                        }`}
-                      >
-                        <span
-                          className="w-4 h-4 rounded-full shrink-0"
-                          style={{
-                            background: s.color,
-                            boxShadow: `0 0 0 3px ${s.color}33`,
-                          }}
-                        />
-                        <span className="text-xs font-body text-foreground flex-1">{s.label}</span>
-                        <span className="text-[10px] font-body font-semibold text-muted-foreground tabular-nums">
-                          {count}
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-              <p className="text-[10px] font-body text-muted-foreground mt-3 pt-3 border-t border-border leading-relaxed">
-                Marker positions are illustrative samples clustered around the conservancy for
-                educational visualisation.
+              <p className="font-body text-foreground/50 text-xs md:text-sm mt-1">
+                Samburu Traditional Ecological Knowledge · Xeno-canto recordings
               </p>
             </div>
-          </div>
-        </div>
-      </header>
 
-      {/* Map + side rail */}
-      <section className="py-8 bg-muted/30">
-        <div className="container max-w-7xl mx-auto px-6">
-          <div className="grid lg:grid-cols-[1fr_320px] gap-4">
-            <div className="rounded-2xl overflow-hidden border border-border h-[640px] relative z-0 bg-muted shadow-warm">
-              {ready && (
-                <MapContainer
-                  center={NAMUNYAK}
-                  zoom={10}
-                  scrollWheelZoom
-                  className="h-full w-full"
-                  worldCopyJump
-                >
-                  <LayersControl position="topright">
-                    <LayersControl.BaseLayer name="OpenStreetMap">
-                      <TileLayer
-                        attribution="&copy; OpenStreetMap contributors"
-                        url="https://{s}.tile.openstreetmap.org/{z}/{y}/{x}.png"
-                        maxZoom={19}
-                      />
-                    </LayersControl.BaseLayer>
-                    <LayersControl.BaseLayer checked name="Esri Satellite">
-                      <TileLayer
-                        attribution="Tiles &copy; Esri"
-                        url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                        maxZoom={19}
-                      />
-                    </LayersControl.BaseLayer>
-                    <LayersControl.BaseLayer name="Esri Terrain">
-                      <TileLayer
-                        attribution="Tiles &copy; Esri"
-                        url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer/tile/{z}/{y}/{x}"
-                        maxZoom={13}
-                      />
-                    </LayersControl.BaseLayer>
-                  </LayersControl>
-
-                  {/* Ecological halo rings around Namunyak — evokes abundance/range visuals */}
-                  <Circle
-                    center={NAMUNYAK}
-                    radius={45000}
-                    pathOptions={{
-                      color: "#4e8a3e",
-                      weight: 1,
-                      opacity: 0.35,
-                      fillColor: "#4e8a3e",
-                      fillOpacity: 0.04,
-                      dashArray: "4 6",
-                    }}
-                  />
-                  <Circle
-                    center={NAMUNYAK}
-                    radius={22000}
-                    pathOptions={{
-                      color: "#d97706",
-                      weight: 1,
-                      opacity: 0.45,
-                      fillColor: "#d97706",
-                      fillOpacity: 0.05,
-                      dashArray: "2 5",
-                    }}
-                  />
-                  <Circle
-                    center={NAMUNYAK}
-                    radius={7000}
-                    pathOptions={{
-                      color: "#dc2626",
-                      weight: 1.5,
-                      opacity: 0.55,
-                      fillColor: "#dc2626",
-                      fillOpacity: 0.08,
-                    }}
-                  />
-
-                  <MapController target={target} />
-
-                  <MarkerClusterGroup chunkedLoading maxClusterRadius={45}>
-                    {visible.map((b) => (
-                      <Marker
-                        key={b.id}
-                        position={[b.lat, b.lon]}
-                        icon={buildIcon(b.category)}
-                        ref={(ref) => {
-                          markerRefs.current[b.id] = ref;
-                        }}
-                      >
-                        <Popup minWidth={280} maxWidth={320}>
-                          <BirdPopup bird={b} />
-                        </Popup>
-                      </Marker>
-                    ))}
-                  </MarkerClusterGroup>
-                </MapContainer>
-              )}
-
-              {/* Overlay: Range legend (bottom-left) */}
-              <div className="absolute bottom-3 left-3 z-[400] bg-card/90 backdrop-blur px-3 py-2.5 rounded-lg text-[11px] font-body shadow-card border border-border max-w-[220px]">
-                <div className="font-display font-bold text-foreground text-xs mb-1.5">
-                  Sampling rings
-                </div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="w-3 h-3 rounded-full bg-red-600/60 border border-red-600" />
-                  <span className="text-muted-foreground">Core (7 km)</span>
-                </div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="w-3 h-3 rounded-full bg-savanna-amber/60 border border-savanna-amber" />
-                  <span className="text-muted-foreground">Buffer (22 km)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-forest-green/60 border border-forest-green" />
-                  <span className="text-muted-foreground">Range (45 km)</span>
-                </div>
+            {/* Endangered species panel — top-right (mirrors reference) */}
+            <div className="absolute top-6 right-6 z-[400] w-[300px] bg-white/85 backdrop-blur rounded-lg border border-black/10 p-4 shadow-md pointer-events-auto">
+              <div className="text-xs font-body font-semibold text-foreground/60 uppercase tracking-wider mb-3">
+                Year-round · resident
               </div>
-            </div>
-
-            {/* Species side rail */}
-            <aside className="rounded-2xl bg-card border border-border overflow-hidden flex flex-col max-h-[640px]">
-              <div className="px-4 py-3 border-b border-border bg-gradient-earth">
-                <h2 className="font-display text-sm font-bold text-foreground uppercase tracking-wide">
-                  Featured voices
-                </h2>
-                <p className="text-[11px] font-body text-muted-foreground mt-0.5">
-                  Tap a species to fly there
-                </p>
-              </div>
-              <ul className="overflow-y-auto divide-y divide-border">
-                {visible.map((b) => {
-                  const s = CAT_STYLE[b.category];
-                  return (
-                    <li key={b.id}>
-                      <button
-                        onClick={() => flyTo(b)}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-muted/60 transition-colors text-left"
-                      >
-                        {b.thumbnailUrl ? (
-                          <img
-                            src={b.thumbnailUrl}
-                            alt=""
-                            className="w-10 h-10 rounded-full object-cover shrink-0"
-                            style={{ boxShadow: `0 0 0 2px ${s.color}55` }}
-                          />
-                        ) : (
-                          <div
-                            className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white text-xs font-bold"
-                            style={{ background: s.color }}
-                          >
-                            {s.glyph}
-                          </div>
-                        )}
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-sm font-display font-bold text-foreground truncate">
-                              {b.localName}
-                            </span>
-                            {b.iucnStatus === "CR" && (
-                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-600 text-white leading-none">
-                                CR
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-[11px] font-body text-muted-foreground truncate">
-                            {b.commonName}
-                          </div>
-                        </div>
-                        <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                      </button>
-                    </li>
-                  );
-                })}
-                {visible.length === 0 && (
-                  <li className="px-4 py-6 text-center text-xs font-body text-muted-foreground">
-                    No species match the current filters.
-                  </li>
-                )}
-              </ul>
-            </aside>
-          </div>
-
-          {/* Endangered spotlight */}
-          <div className="mt-8 rounded-2xl border border-red-500/30 bg-gradient-to-br from-red-500/10 via-card to-savanna-gold/10 p-6 md:p-8">
-            <div className="flex items-center gap-2 mb-3">
-              <AlertTriangle className="w-5 h-5 text-red-600" />
-              <h2 className="font-display text-xl md:text-2xl font-bold text-foreground">
-                Silent skies: the vulture spotlight
-              </h2>
-            </div>
-            <p className="font-body text-sm md:text-base text-foreground/80 max-w-3xl leading-relaxed mb-5">
-              African vultures have collapsed by more than 80% in a generation. Samburu elders knew
-              first — the spirals over carcasses grew thinner, the manyattas quieter. Three
-              critically endangered species now feature on this map so their calls stay heard.
-            </p>
-            <div className="grid md:grid-cols-3 gap-4">
-              {birds
-                .filter((b) => b.category === "endangered")
-                .map((b) => (
-                  <button
-                    key={b.id}
-                    onClick={() => flyTo(b)}
-                    className="text-left group rounded-xl border border-red-500/30 bg-card p-4 hover:shadow-warm hover:border-red-500/60 transition-all"
-                  >
-                    <div className="flex items-start gap-3">
-                      {b.thumbnailUrl ? (
-                        <img
-                          src={b.thumbnailUrl}
-                          alt={b.commonName}
-                          className="w-16 h-16 rounded-lg object-cover shrink-0 ring-2 ring-red-500/40"
-                        />
-                      ) : (
-                        <div className="w-16 h-16 rounded-lg bg-red-600/20 flex items-center justify-center shrink-0">
-                          <AlertTriangle className="w-6 h-6 text-red-600" />
-                        </div>
-                      )}
-                      <div className="min-w-0">
-                        <div className="text-[10px] font-bold text-white bg-red-600 px-1.5 py-0.5 rounded inline-block mb-1">
-                          IUCN · CRITICALLY ENDANGERED
-                        </div>
-                        <h3 className="font-display font-bold text-foreground text-base leading-tight">
-                          {b.localName}
-                        </h3>
-                        <p className="text-xs font-body text-muted-foreground">{b.commonName}</p>
-                        <p className="text-[11px] font-body italic text-muted-foreground">
-                          {b.scientificName}
-                        </p>
+              <ul className="space-y-3">
+                {endangered.map((b) => (
+                  <li key={b.id} className="flex items-start gap-3">
+                    <span
+                      className="w-3 h-3 rounded-full shrink-0 mt-1.5"
+                      style={{ background: CAT_STYLE.endangered.color }}
+                    />
+                    {b.thumbnailUrl && (
+                      <img
+                        src={b.thumbnailUrl}
+                        alt=""
+                        className="w-14 h-14 rounded object-cover shrink-0"
+                      />
+                    )}
+                    <button
+                      onClick={() => flyToBird(b)}
+                      className="text-left flex-1 min-w-0 hover:opacity-70 transition-opacity"
+                    >
+                      <div className="font-display font-bold text-foreground text-sm leading-tight">
+                        {b.commonName}
                       </div>
-                    </div>
-                    <p className="text-xs font-body text-foreground/80 mt-3 leading-relaxed line-clamp-3">
-                      {b.story}
-                    </p>
-                    <div className="mt-3 text-[11px] font-body font-semibold text-red-600 group-hover:underline">
-                      Locate on map →
-                    </div>
-                  </button>
+                      <div className="text-[11px] font-body italic text-muted-foreground">
+                        ({b.scientificName})
+                      </div>
+                      <div className="text-[10px] font-body text-foreground/60 mt-0.5">
+                        {b.localName} · {b.prediction}
+                      </div>
+                    </button>
+                  </li>
                 ))}
+              </ul>
+            </div>
+
+            {/* Species legend — bottom-right */}
+            <div className="absolute bottom-6 right-6 z-[400] w-[300px] bg-white/90 backdrop-blur rounded-lg border border-black/10 p-4 shadow-md">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="text-[10px] font-body font-semibold text-foreground/60 uppercase tracking-wider mb-2">
+                    Species group
+                  </div>
+                  <ul className="space-y-1.5">
+                    {(Object.keys(CAT_STYLE) as SamburuBird["category"][]).map((c) => {
+                      const s = CAT_STYLE[c];
+                      const active = activeCats.has(c);
+                      return (
+                        <li key={c}>
+                          <button
+                            onClick={() => toggleCat(c)}
+                            className={`flex items-center gap-2 text-left w-full text-[11px] font-body transition-opacity ${
+                              active ? "opacity-100" : "opacity-30 hover:opacity-60"
+                            }`}
+                          >
+                            <span
+                              className="w-2.5 h-2.5 rounded-full shrink-0"
+                              style={{ background: s.color }}
+                            />
+                            <span className="text-foreground/80">{s.label}</span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+                <div>
+                  <div className="text-[10px] font-body font-semibold text-foreground/60 uppercase tracking-wider mb-2">
+                    Relative abundance
+                  </div>
+                  <div className="flex items-end gap-1.5 h-6">
+                    {[4, 6, 8, 11, 14].map((sz) => (
+                      <span
+                        key={sz}
+                        className="rounded-full bg-foreground/70"
+                        style={{ width: sz, height: sz }}
+                      />
+                    ))}
+                  </div>
+                  <div className="flex justify-between text-[9px] font-body text-foreground/50 mt-1">
+                    <span>Lower</span>
+                    <span>Higher</span>
+                  </div>
+                </div>
+              </div>
+              <div className="border-t border-black/10 mt-3 pt-2 text-[9px] font-body text-foreground/50 leading-relaxed">
+                Illustrative sample points across Kenyan biogeographic zones.
+              </div>
+            </div>
+
+            {/* Footer strip — bottom-left */}
+            <div className="absolute bottom-6 left-6 z-[400] text-[10px] font-body text-foreground/60">
+              Data: Samburu TEK · Xeno-canto · Wikipedia &nbsp;|&nbsp; Map: Lkotkote Project &nbsp;|&nbsp; {new Date().getFullYear()}
             </div>
           </div>
 
-          <p className="text-xs font-body text-muted-foreground mt-6 text-center max-w-2xl mx-auto leading-relaxed">
-            Marker locations are illustrative samples around Namunyak Conservancy. Bird photos via
-            Wikipedia; sound recordings courtesy of{" "}
-            <a href="https://xeno-canto.org" target="_blank" rel="noreferrer" className="underline">
-              Xeno-canto
-            </a>{" "}
-            contributors (CC licensed). IUCN status from the IUCN Red List of Threatened Species.
+          <p className="text-xs font-body text-muted-foreground mt-4 text-center max-w-2xl mx-auto leading-relaxed">
+            Click any dot to hear the bird, read its Samburu meaning, and see the sound-graph of its
+            call. Toggle species groups in the legend to filter the map.
           </p>
         </div>
       </section>
+
       <Footer />
     </div>
   );
