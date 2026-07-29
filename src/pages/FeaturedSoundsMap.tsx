@@ -304,7 +304,7 @@ const FeaturedSoundsMap = () => {
                 minZoom={5}
                 maxZoom={10}
                 scrollWheelZoom
-                zoomControl={false}
+                zoomControl={true}
                 attributionControl={false}
                 maxBounds={KENYA_BOUNDS}
                 className="h-full w-full"
