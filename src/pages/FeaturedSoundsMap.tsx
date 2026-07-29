@@ -74,7 +74,7 @@ const REGION_BIAS: Record<SamburuBird["category"], Array<[number, number, number
 
 function generateSamples(bird: SamburuBird): Sample[] {
   const regions = REGION_BIAS[bird.category];
-  const perRegion = bird.category === "endangered" ? 6 : 4;
+  const perRegion = bird.category === "endangered" ? 3 : 2;
   const samples: Sample[] = [];
   regions.forEach((r, ri) => {
     for (let i = 0; i < perRegion; i++) {
@@ -82,9 +82,15 @@ function generateSamples(bird: SamburuBird): Sample[] {
       const ry = rand(bird.id * 17 + ri * 7, i * 3 + 2) - 0.5;
       const lat = r[0] + rx * r[2];
       const lon = r[1] + ry * r[2];
-      // clamp to Kenya
-      if (lat < -4.7 || lat > 5.0 || lon < 33.9 || lon > 41.9) continue;
-      const abundance = 0.35 + rand(bird.id, i * 5 + ri) * 0.65; // 0.35 – 1
+      // Kenya land bbox
+      if (lat < -4.6 || lat > 4.6 || lon < 33.95 || lon > 41.9) continue;
+      // Trim Indian Ocean along the south-eastern coast (rough diagonal)
+      if (lat < -1.6 && lon > 41.0) continue;
+      if (lat < -3.0 && lon > 40.4) continue;
+      if (lat < -4.0 && lon > 39.9) continue;
+      // Trim Lake Victoria (SW corner)
+      if (lat < -0.2 && lat > -1.5 && lon < 34.5) continue;
+      const abundance = 0.35 + rand(bird.id, i * 5 + ri) * 0.65;
       samples.push({ id: `${bird.id}-${ri}-${i}`, birdId: bird.id, lat, lon, abundance });
     }
   });
@@ -298,7 +304,7 @@ const FeaturedSoundsMap = () => {
                 minZoom={5}
                 maxZoom={10}
                 scrollWheelZoom
-                zoomControl={false}
+                zoomControl={true}
                 attributionControl={false}
                 maxBounds={KENYA_BOUNDS}
                 className="h-full w-full"
