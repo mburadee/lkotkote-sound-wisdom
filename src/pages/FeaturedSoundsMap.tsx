@@ -376,7 +376,7 @@ const FeaturedSoundsMap = () => {
             </div>
 
             {/* Species filter panel — top-right */}
-            <div className="absolute top-4 right-4 z-[400] w-[290px] bg-white/92 backdrop-blur rounded-lg border border-black/10 shadow-md pointer-events-auto flex flex-col max-h-[calc(100%-2rem)]">
+            <div className="absolute top-4 right-4 z-[400] w-[290px] bg-white/92 backdrop-blur rounded-lg border border-black/10 shadow-md pointer-events-auto flex flex-col max-h-[58%]">
               <div className="flex items-center justify-between px-4 pt-3 pb-2">
                 <div className="text-[11px] font-body font-semibold text-foreground/70 uppercase tracking-wider">
                   Filter species
