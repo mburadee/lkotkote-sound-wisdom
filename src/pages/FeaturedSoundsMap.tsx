@@ -214,6 +214,7 @@ const FeaturedSoundsMap = () => {
   const [activeCats, setActiveCats] = useState<Set<SamburuBird["category"]>>(
     new Set(["weather", "omen", "social", "predator", "endangered"]),
   );
+  const [hiddenBirds, setHiddenBirds] = useState<Set<number>>(new Set());
 
   const samples = useMemo(() => SAMBURU_BIRDS.flatMap(generateSamples), []);
   const birdMap = useMemo(() => {
@@ -248,7 +249,7 @@ const FeaturedSoundsMap = () => {
 
   const visibleSamples = samples.filter((s) => {
     const b = birdMap.get(s.birdId);
-    return b && activeCats.has(b.category);
+    return b && activeCats.has(b.category) && !hiddenBirds.has(b.id);
   });
 
   const toggleCat = (c: SamburuBird["category"]) => {
@@ -260,7 +261,27 @@ const FeaturedSoundsMap = () => {
     });
   };
 
-  const endangered = birds.filter((b) => b.category === "endangered");
+  const toggleBird = (id: number) => {
+    setHiddenBirds((prev) => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
+  };
+
+  const grouped = useMemo(() => {
+    const order: SamburuBird["category"][] = [
+      "endangered",
+      "predator",
+      "weather",
+      "omen",
+      "social",
+    ];
+    return order
+      .map((c) => ({ cat: c, list: birds.filter((b) => b.category === c) }))
+      .filter((g) => g.list.length > 0);
+  }, [birds]);
 
   const flyToBird = (b: Enriched) => {
     const first = samples.find((s) => s.birdId === b.id);
