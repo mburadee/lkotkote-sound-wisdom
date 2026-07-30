@@ -214,6 +214,7 @@ const FeaturedSoundsMap = () => {
   const [activeCats, setActiveCats] = useState<Set<SamburuBird["category"]>>(
     new Set(["weather", "omen", "social", "predator", "endangered"]),
   );
+  const [hiddenBirds, setHiddenBirds] = useState<Set<number>>(new Set());
 
   const samples = useMemo(() => SAMBURU_BIRDS.flatMap(generateSamples), []);
   const birdMap = useMemo(() => {
@@ -248,7 +249,7 @@ const FeaturedSoundsMap = () => {
 
   const visibleSamples = samples.filter((s) => {
     const b = birdMap.get(s.birdId);
-    return b && activeCats.has(b.category);
+    return b && activeCats.has(b.category) && !hiddenBirds.has(b.id);
   });
 
   const toggleCat = (c: SamburuBird["category"]) => {
@@ -260,7 +261,27 @@ const FeaturedSoundsMap = () => {
     });
   };
 
-  const endangered = birds.filter((b) => b.category === "endangered");
+  const toggleBird = (id: number) => {
+    setHiddenBirds((prev) => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
+  };
+
+  const grouped = useMemo(() => {
+    const order: SamburuBird["category"][] = [
+      "endangered",
+      "predator",
+      "weather",
+      "omen",
+      "social",
+    ];
+    return order
+      .map((c) => ({ cat: c, list: birds.filter((b) => b.category === c) }))
+      .filter((g) => g.list.length > 0);
+  }, [birds]);
 
   const flyToBird = (b: Enriched) => {
     const first = samples.find((s) => s.birdId === b.id);
@@ -296,7 +317,7 @@ const FeaturedSoundsMap = () => {
           </Link>
 
           {/* Editorial map canvas */}
-          <div className="lk-editorial relative rounded-lg overflow-hidden border border-black/10 bg-[#f4f1ea] shadow-[0_20px_60px_-30px_rgba(0,0,0,0.35)] h-[820px]">
+          <div className="lk-editorial relative rounded-lg overflow-hidden border border-black/10 bg-[#f4f1ea] shadow-[0_20px_60px_-30px_rgba(0,0,0,0.35)] h-[68vh] min-h-[460px] max-h-[620px]">
             {ready && (
               <MapContainer
                 center={KENYA_CENTER}
@@ -342,54 +363,114 @@ const FeaturedSoundsMap = () => {
             )}
 
             {/* Editorial title — top-left */}
-            <div className="absolute top-6 left-6 z-[400] max-w-[520px] pointer-events-none">
-              <h1 className="font-display font-bold text-foreground text-4xl md:text-5xl leading-[1.05] tracking-tight m-0">
+            <div className="absolute top-4 left-4 z-[400] max-w-[380px] pointer-events-none bg-white/90 backdrop-blur rounded-lg border border-black/10 shadow-sm px-4 py-3">
+              <h1 className="font-display font-bold text-foreground text-xl md:text-2xl leading-tight tracking-tight m-0">
                 Featured Birds of Kenya
               </h1>
-              <p className="font-body text-foreground/70 text-base md:text-lg mt-2 leading-snug">
+              <p className="font-body text-foreground/75 text-xs md:text-sm mt-1 leading-snug">
                 Occurrence &amp; relative abundance across Kenya
               </p>
-              <p className="font-body text-foreground/50 text-xs md:text-sm mt-1">
-                Samburu Traditional Ecological Knowledge · Xeno-canto recordings
+              <p className="font-body text-foreground/60 text-[10px] md:text-xs mt-0.5">
+                Samburu TEK · Xeno-canto recordings
               </p>
             </div>
 
-            {/* Endangered species panel — top-right (mirrors reference) */}
-            <div className="absolute top-6 right-6 z-[400] w-[300px] bg-white/85 backdrop-blur rounded-lg border border-black/10 p-4 shadow-md pointer-events-auto">
-              <div className="text-xs font-body font-semibold text-foreground/60 uppercase tracking-wider mb-3">
-                Year-round · resident
+            {/* Species filter panel — top-right */}
+            <div className="absolute top-4 right-4 z-[400] w-[290px] bg-white/92 backdrop-blur rounded-lg border border-black/10 shadow-md pointer-events-auto flex flex-col max-h-[58%]">
+              <div className="flex items-center justify-between px-4 pt-3 pb-2">
+                <div className="text-[11px] font-body font-semibold text-foreground/70 uppercase tracking-wider">
+                  Filter species
+                </div>
+                <button
+                  onClick={() => {
+                    setHiddenBirds(new Set());
+                    setActiveCats(
+                      new Set(["weather", "omen", "social", "predator", "endangered"]),
+                    );
+                  }}
+                  className="text-[10px] font-body text-foreground/60 hover:text-foreground underline"
+                >
+                  Reset
+                </button>
               </div>
-              <ul className="space-y-3">
-                {endangered.map((b) => (
-                  <li key={b.id} className="flex items-start gap-3">
-                    <span
-                      className="w-3 h-3 rounded-full shrink-0 mt-1.5"
-                      style={{ background: CAT_STYLE.endangered.color }}
-                    />
-                    {b.thumbnailUrl && (
-                      <img
-                        src={b.thumbnailUrl}
-                        alt=""
-                        className="w-14 h-14 rounded object-cover shrink-0"
-                      />
-                    )}
-                    <button
-                      onClick={() => flyToBird(b)}
-                      className="text-left flex-1 min-w-0 hover:opacity-70 transition-opacity"
-                    >
-                      <div className="font-display font-bold text-foreground text-sm leading-tight">
-                        {b.commonName}
-                      </div>
-                      <div className="text-[11px] font-body italic text-muted-foreground">
-                        ({b.scientificName})
-                      </div>
-                      <div className="text-[10px] font-body text-foreground/60 mt-0.5">
-                        {b.localName} · {b.prediction}
-                      </div>
-                    </button>
-                  </li>
-                ))}
-              </ul>
+              <div className="overflow-y-auto px-4 pb-3 space-y-3">
+                {grouped.map(({ cat, list }) => {
+                  const s = CAT_STYLE[cat];
+                  const catOn = activeCats.has(cat);
+                  return (
+                    <div key={cat}>
+                      <button
+                        onClick={() => toggleCat(cat)}
+                        className={`flex items-center gap-2 w-full text-left mb-1.5 transition-opacity ${
+                          catOn ? "opacity-100" : "opacity-40"
+                        }`}
+                      >
+                        <span
+                          className="w-2.5 h-2.5 rounded-full shrink-0"
+                          style={{ background: s.color }}
+                        />
+                        <span className="text-[10px] font-body font-semibold uppercase tracking-wider text-foreground/70">
+                          {s.label}
+                        </span>
+                      </button>
+                      <ul className="space-y-1.5 pl-1">
+                        {list.map((b) => {
+                          const on = catOn && !hiddenBirds.has(b.id);
+                          return (
+                            <li key={b.id} className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={on}
+                                onChange={() => toggleBird(b.id)}
+                                disabled={!catOn}
+                                aria-label={`Toggle ${b.commonName}`}
+                                className="accent-[#4e8a3e] w-3 h-3 shrink-0"
+                              />
+                              {b.thumbnailUrl ? (
+                                <img
+                                  src={b.thumbnailUrl}
+                                  alt=""
+                                  className={`w-7 h-7 rounded object-cover shrink-0 ${
+                                    on ? "" : "grayscale opacity-50"
+                                  }`}
+                                />
+                              ) : (
+                                <span className="w-7 h-7 rounded bg-muted shrink-0" />
+                              )}
+                              <button
+                                onClick={() => flyToBird(b)}
+                                className={`text-left flex-1 min-w-0 hover:opacity-70 transition-opacity ${
+                                  on ? "" : "opacity-50"
+                                }`}
+                              >
+                                <div className="font-body font-semibold text-foreground text-[11px] leading-tight truncate">
+                                  {b.commonName}
+                                </div>
+                                <div className="text-[10px] font-body text-foreground/60 truncate">
+                                  {b.localName}
+                                </div>
+                              </button>
+                              {b.iucnStatus && (
+                                <span
+                                  className={`text-[9px] font-body font-bold px-1.5 py-0.5 rounded shrink-0 ${
+                                    b.iucnStatus === "CR"
+                                      ? "bg-red-600 text-white"
+                                      : b.iucnStatus === "EN"
+                                        ? "bg-orange-500 text-white"
+                                        : "bg-amber-400 text-black"
+                                  }`}
+                                >
+                                  {b.iucnStatus}
+                                </span>
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Species legend — bottom-right */}
