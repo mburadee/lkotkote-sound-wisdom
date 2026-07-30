@@ -317,7 +317,7 @@ const FeaturedSoundsMap = () => {
           </Link>
 
           {/* Editorial map canvas */}
-          <div className="lk-editorial relative rounded-lg overflow-hidden border border-black/10 bg-[#f4f1ea] shadow-[0_20px_60px_-30px_rgba(0,0,0,0.35)] h-[820px]">
+          <div className="lk-editorial relative rounded-lg overflow-hidden border border-black/10 bg-[#f4f1ea] shadow-[0_20px_60px_-30px_rgba(0,0,0,0.35)] h-[68vh] min-h-[460px] max-h-[620px]">
             {ready && (
               <MapContainer
                 center={KENYA_CENTER}
