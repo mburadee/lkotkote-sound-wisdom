@@ -1,545 +1,274 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { Circle, MapContainer, Marker, TileLayer, Tooltip, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { Link } from "react-router-dom";
-import { ArrowLeft, Bird, Volume2, AlertTriangle } from "lucide-react";
+import { ArrowLeft, ArrowRight, Bird, ChevronDown, MapPin, Volume2 } from "lucide-react";
 
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BirdSoundPlayer from "@/components/BirdSoundPlayer";
+import { Button } from "@/components/ui/button";
 import { SAMBURU_BIRDS, type SamburuBird } from "@/data/samburuTek";
 
-// Kenya center + tight bounds for a national editorial map view
-const KENYA_CENTER: [number, number] = [0.6, 37.9];
-const KENYA_BOUNDS: L.LatLngBoundsLiteral = [
-  [-4.9, 33.7],
-  [5.2, 42.1],
-];
-
-type Sample = { id: string; birdId: number; lat: number; lon: number; abundance: number };
-type Enriched = SamburuBird & {
+type EnrichedBird = SamburuBird & {
   thumbnailUrl?: string;
   audioUrl?: string;
   recordist?: string;
 };
 
-// Editorial palette — mirrors the reference map (muted red / blue / green)
-const CAT_STYLE: Record<
-  SamburuBird["category"],
-  { color: string; label: string }
-> = {
-  endangered: { color: "#d64545", label: "Critically endangered" },
-  predator: { color: "#c98a2b", label: "Predator" },
-  weather: { color: "#3a76b8", label: "Weather reader" },
-  omen: { color: "#6b4a2a", label: "Omen keeper" },
-  social: { color: "#3f7a3a", label: "Community bird" },
+type Habitat = {
+  center: [number, number];
+  zoom: number;
+  radius: number;
+  label: string;
 };
 
-// Seeded PRNG so dots are stable between renders
-function rand(seed: number, n: number) {
-  const x = Math.sin(seed * 99.13 + n * 7.71) * 43758.5453;
-  return x - Math.floor(x);
-}
-
-// Regional bias per bird category so each species reads as a range map.
-// Values are rough Kenyan biogeographic zones (northern arid, central highlands,
-// coastal, western lakes) — purely illustrative.
-const REGION_BIAS: Record<SamburuBird["category"], Array<[number, number, number]>> = {
-  // [lat, lon, spread]
-  endangered: [
-    [1.6, 36.3, 1.4], // northern rift / Samburu
-    [-1.5, 37.2, 1.2], // Nairobi + Athi plains
-    [2.6, 40.0, 1.4], // north-east
-  ],
-  predator: [
-    [0.5, 37.4, 2.0],
-    [-2.5, 38.5, 1.5],
-  ],
-  weather: [
-    [0.0, 37.0, 2.4],
-    [-3.5, 39.8, 1.2], // coast
-  ],
-  omen: [
-    [0.9, 37.6, 2.0],
-    [-0.5, 35.5, 1.4], // western highlands
-  ],
-  social: [
-    [0.6, 37.8, 2.4],
-    [-1.2, 36.9, 1.4],
-    [-3.5, 39.7, 1.0],
-  ],
+const HABITATS: Record<SamburuBird["category"], Habitat> = {
+  weather: { center: [0.45, 37.35], zoom: 6, radius: 220000, label: "Seasonal grasslands and river corridors" },
+  omen: { center: [0.85, 37.2], zoom: 6, radius: 190000, label: "Acacia woodland and settled rangelands" },
+  social: { center: [0.95, 37.4], zoom: 7, radius: 150000, label: "Dry savanna, cliffs and community lands" },
+  predator: { center: [0.25, 37.7], zoom: 6, radius: 240000, label: "Open savanna and scrubland" },
+  endangered: { center: [1.15, 37.1], zoom: 6, radius: 300000, label: "Northern rangelands and escarpments" },
 };
 
-function generateSamples(bird: SamburuBird): Sample[] {
-  const regions = REGION_BIAS[bird.category];
-  const perRegion = bird.category === "endangered" ? 3 : 2;
-  const samples: Sample[] = [];
-  regions.forEach((r, ri) => {
-    for (let i = 0; i < perRegion; i++) {
-      const rx = rand(bird.id * 13 + ri * 5, i * 3 + 1) - 0.5;
-      const ry = rand(bird.id * 17 + ri * 7, i * 3 + 2) - 0.5;
-      const lat = r[0] + rx * r[2];
-      const lon = r[1] + ry * r[2];
-      // Kenya land bbox
-      if (lat < -4.6 || lat > 4.6 || lon < 33.95 || lon > 41.9) continue;
-      // Trim Indian Ocean along the south-eastern coast (rough diagonal)
-      if (lat < -1.6 && lon > 41.0) continue;
-      if (lat < -3.0 && lon > 40.4) continue;
-      if (lat < -4.0 && lon > 39.9) continue;
-      // Trim Lake Victoria (SW corner)
-      if (lat < -0.2 && lat > -1.5 && lon < 34.5) continue;
-      const abundance = 0.35 + rand(bird.id, i * 5 + ri) * 0.65;
-      samples.push({ id: `${bird.id}-${ri}-${i}`, birdId: bird.id, lat, lon, abundance });
-    }
-  });
-  return samples;
-}
+const STATUS_LABEL: Record<NonNullable<SamburuBird["iucnStatus"]>, string> = {
+  LC: "Least Concern",
+  NT: "Near Threatened",
+  VU: "Vulnerable",
+  EN: "Endangered",
+  CR: "Critically Endangered",
+};
+
+const categoryLabel: Record<SamburuBird["category"], string> = {
+  weather: "Weather reader",
+  omen: "Cultural indicator",
+  social: "Community bird",
+  predator: "Bird of prey",
+  endangered: "At risk",
+};
 
 async function fetchWikiThumb(name: string): Promise<string | undefined> {
   try {
-    const r = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(name)}`);
-    if (!r.ok) return;
-    const d = await r.json();
-    return d.thumbnail?.source ?? d.originalimage?.source;
+    const response = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(name)}`);
+    if (!response.ok) return undefined;
+    const data = await response.json();
+    return data.thumbnail?.source ?? data.originalimage?.source;
   } catch {
-    return;
+    return undefined;
   }
 }
 
 async function fetchXenoCanto(scientific: string): Promise<{ url?: string; recordist?: string }> {
   try {
-    const q = encodeURIComponent(scientific);
-    const r = await fetch(`https://xeno-canto.org/api/2/recordings?query=${q}+q:A`);
-    if (!r.ok) return {};
-    const d = await r.json();
-    const rec = d.recordings?.[0];
-    if (!rec?.file) return {};
-    const url = rec.file.startsWith("http") ? rec.file : `https:${rec.file}`;
-    return { url, recordist: rec.rec };
+    const response = await fetch(
+      `https://xeno-canto.org/api/2/recordings?query=${encodeURIComponent(scientific)}+q:A`,
+    );
+    if (!response.ok) return {};
+    const data = await response.json();
+    const recording = data.recordings?.[0];
+    if (!recording?.file) return {};
+    return {
+      url: recording.file.startsWith("http") ? recording.file : `https:${recording.file}`,
+      recordist: recording.rec,
+    };
   } catch {
     return {};
   }
 }
 
-// Small, flat coloured dot — matches the editorial reference map exactly.
-function dotIcon(color: string, abundance: number) {
-  const size = Math.round(6 + abundance * 8); // 6 → 14 px
-  const html = `<div style="
-    width:${size}px;height:${size}px;border-radius:9999px;
-    background:${color};
-    border:1px solid rgba(255,255,255,.85);
-    box-shadow:0 0 0 0.5px rgba(0,0,0,.25);
-  "></div>`;
-  return L.divIcon({
-    html,
-    className: "lk-dot",
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
-    popupAnchor: [0, -size / 2],
-  });
-}
+const habitatMarker = L.divIcon({
+  className: "lk-habitat-marker",
+  html: '<span class="lk-habitat-marker__pulse"></span><span class="lk-habitat-marker__core"></span>',
+  iconSize: [32, 32],
+  iconAnchor: [16, 16],
+});
 
-const MapController = ({ target }: { target: [number, number, number] | null }) => {
+const MapFocus = ({ habitat }: { habitat: Habitat }) => {
   const map = useMap();
+
   useEffect(() => {
-    if (target) map.flyTo([target[0], target[1]], target[2], { duration: 0.9 });
-  }, [target, map]);
+    map.flyTo(habitat.center, habitat.zoom, { duration: 1.1 });
+  }, [habitat, map]);
+
   return null;
 };
 
-const BirdPopup = ({ bird }: { bird: Enriched }) => {
-  const audioSrc = bird.localAudio ?? bird.audioUrl;
-  const s = CAT_STYLE[bird.category];
-  return (
-    <div className="w-[280px]">
-      <div className="flex gap-3 items-start mb-2">
-        {bird.thumbnailUrl ? (
-          <img
-            src={bird.thumbnailUrl}
-            alt={`${bird.commonName} (${bird.localName})`}
-            className="w-16 h-16 rounded-full object-cover shrink-0"
-            style={{ boxShadow: `0 0 0 2px ${s.color}66` }}
-            width={64}
-            height={64}
-          />
-        ) : (
-          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center shrink-0">
-            <Bird className="w-6 h-6 text-muted-foreground" />
-          </div>
-        )}
-        <div className="min-w-0">
-          <h3 className="font-display text-base font-bold text-foreground leading-tight m-0">
-            {bird.localName}
-          </h3>
-          <p className="text-xs font-body text-foreground/80 m-0">{bird.commonName}</p>
-          <p className="text-[11px] font-body italic text-muted-foreground m-0">
-            {bird.scientificName}
-          </p>
-        </div>
-      </div>
-      <div className="flex items-center gap-1.5 flex-wrap mb-2">
-        <span
-          className="text-[10px] font-body font-semibold px-2 py-0.5 rounded-full uppercase tracking-wide"
-          style={{ background: `${s.color}22`, color: s.color, border: `1px solid ${s.color}55` }}
-        >
-          {s.label}
-        </span>
-        {bird.iucnStatus === "CR" && (
-          <span className="text-[10px] font-body font-bold px-2 py-0.5 rounded-full bg-red-600 text-white uppercase tracking-wide inline-flex items-center gap-1">
-            <AlertTriangle className="w-2.5 h-2.5" /> IUCN: CR
-          </span>
-        )}
-      </div>
-      <p className="text-xs font-body font-semibold text-savanna-amber m-0 mb-1">
-        Predicts: {bird.prediction}
-      </p>
-      <p className="text-xs font-body text-foreground/85 leading-relaxed m-0 mb-2">{bird.story}</p>
-      {audioSrc ? (
-        <BirdSoundPlayer src={audioSrc} credit={bird.audioCredit ?? bird.recordist} />
-      ) : (
-        <div className="flex items-center gap-1.5 text-xs font-body text-muted-foreground">
-          <Volume2 className="w-3.5 h-3.5" /> No recording available
-        </div>
-      )}
-    </div>
-  );
-};
-
 const FeaturedSoundsMap = () => {
-  const [birds, setBirds] = useState<Enriched[]>(SAMBURU_BIRDS);
+  const [birds, setBirds] = useState<EnrichedBird[]>(SAMBURU_BIRDS);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [showSpecies, setShowSpecies] = useState(false);
   const [ready, setReady] = useState(false);
-  const [target, setTarget] = useState<[number, number, number] | null>(null);
-  const [activeCats, setActiveCats] = useState<Set<SamburuBird["category"]>>(
-    new Set(["weather", "omen", "social", "predator", "endangered"]),
-  );
-  const [hiddenBirds, setHiddenBirds] = useState<Set<number>>(new Set());
 
-  const samples = useMemo(() => SAMBURU_BIRDS.flatMap(generateSamples), []);
-  const birdMap = useMemo(() => {
-    const m = new Map<number, Enriched>();
-    birds.forEach((b) => m.set(b.id, b));
-    return m;
-  }, [birds]);
+  const activeBird = birds[activeIndex] ?? birds[0];
+  const habitat = activeBird ? HABITATS[activeBird.category] : HABITATS.social;
+  const audioSrc = activeBird?.localAudio ?? activeBird?.audioUrl;
 
   useEffect(() => {
-    const id = window.requestAnimationFrame(() => setReady(true));
-    return () => window.cancelAnimationFrame(id);
+    const frame = window.requestAnimationFrame(() => setReady(true));
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      const enriched = await Promise.all(
-        SAMBURU_BIRDS.map(async (b) => {
-          const [thumb, audio] = await Promise.all([
-            fetchWikiThumb(b.commonName),
-            fetchXenoCanto(b.scientificName),
-          ]);
-          return { ...b, thumbnailUrl: thumb, audioUrl: audio.url, recordist: audio.recordist };
-        }),
-      );
+    void Promise.all(
+      SAMBURU_BIRDS.map(async (bird) => {
+        const [thumbnailUrl, audio] = await Promise.all([
+          fetchWikiThumb(bird.commonName),
+          bird.localAudio ? Promise.resolve({}) : fetchXenoCanto(bird.scientificName),
+        ]);
+        return { ...bird, thumbnailUrl, audioUrl: audio.url, recordist: audio.recordist };
+      }),
+    ).then((enriched) => {
       if (!cancelled) setBirds(enriched);
-    })();
+    });
     return () => {
       cancelled = true;
     };
   }, []);
 
-  const visibleSamples = samples.filter((s) => {
-    const b = birdMap.get(s.birdId);
-    return b && activeCats.has(b.category) && !hiddenBirds.has(b.id);
-  });
-
-  const toggleCat = (c: SamburuBird["category"]) => {
-    setActiveCats((prev) => {
-      const n = new Set(prev);
-      if (n.has(c)) n.delete(c);
-      else n.add(c);
-      return n;
-    });
+  const goTo = (index: number) => {
+    const length = birds.length;
+    if (!length) return;
+    setActiveIndex((index + length) % length);
+    setShowSpecies(false);
   };
 
-  const toggleBird = (id: number) => {
-    setHiddenBirds((prev) => {
-      const n = new Set(prev);
-      if (n.has(id)) n.delete(id);
-      else n.add(id);
-      return n;
-    });
-  };
+  const progress = useMemo(() => `${String(activeIndex + 1).padStart(2, "0")} / ${String(birds.length).padStart(2, "0")}`, [activeIndex, birds.length]);
 
-  const grouped = useMemo(() => {
-    const order: SamburuBird["category"][] = [
-      "endangered",
-      "predator",
-      "weather",
-      "omen",
-      "social",
-    ];
-    return order
-      .map((c) => ({ cat: c, list: birds.filter((b) => b.category === c) }))
-      .filter((g) => g.list.length > 0);
-  }, [birds]);
-
-  const flyToBird = (b: Enriched) => {
-    const first = samples.find((s) => s.birdId === b.id);
-    if (first) setTarget([first.lat, first.lon, 8]);
-  };
+  if (!activeBird) return null;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-map-ink text-map-foreground">
       <Helmet>
-        <title>Sounds Map — Featured Birds of Kenya · Lkotkote</title>
-        <meta
-          name="description"
-          content="An editorial bioacoustic atlas of Kenya. Explore 17 featured birds — including three critically endangered vultures — with calls, waveforms, and Samburu Traditional Ecological Knowledge."
-        />
+        <title>Interactive Sound Map — Featured Birds · Lkotkote</title>
+        <meta name="description" content="Explore featured birds through interactive habitat maps, Indigenous knowledge and playable bioacoustic waveforms." />
         <link rel="canonical" href="https://lkotkote.com/map" />
-        <meta property="og:title" content="Sounds Map — Lkotkote" />
+        <meta property="og:title" content="Interactive Sound Map — Lkotkote" />
+        <meta property="og:description" content="Explore featured birds through interactive habitat maps, Indigenous knowledge and playable bioacoustic waveforms." />
         <meta property="og:url" content="https://lkotkote.com/map" />
         <style>{`
-          .leaflet-popup-content-wrapper { border-radius: 14px; }
-          .leaflet-popup-content { margin: 12px 14px; }
-          .lk-editorial .leaflet-container { background: #f4f1ea; font-family: 'Source Sans 3', sans-serif; }
+          .lk-sound-map .leaflet-container { background: hsl(var(--map-ink)); font-family: var(--font-body); }
+          .lk-sound-map .leaflet-tile-pane { filter: saturate(.35) brightness(.55) contrast(1.1); }
+          .lk-sound-map .leaflet-control-zoom a { background: hsl(var(--map-panel) / .94); color: hsl(var(--map-foreground)); border-color: hsl(var(--map-line)); }
+          .lk-sound-map .leaflet-control-attribution { background: hsl(var(--map-panel) / .82); color: hsl(var(--map-muted)); }
+          .lk-sound-map .leaflet-control-attribution a { color: hsl(var(--map-signal)); }
+          .lk-habitat-marker { position: relative; }
+          .lk-habitat-marker__pulse, .lk-habitat-marker__core { position: absolute; inset: 50% auto auto 50%; border-radius: 999px; transform: translate(-50%, -50%); }
+          .lk-habitat-marker__pulse { width: 32px; height: 32px; background: hsl(var(--map-signal) / .18); animation: habitat-pulse 2s ease-out infinite; }
+          .lk-habitat-marker__core { width: 10px; height: 10px; background: hsl(var(--map-signal)); box-shadow: var(--shadow-signal); }
+          @keyframes habitat-pulse { 0% { transform: translate(-50%, -50%) scale(.35); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1.3); opacity: 0; } }
+          @media (prefers-reduced-motion: reduce) { .lk-habitat-marker__pulse { animation: none; } }
         `}</style>
       </Helmet>
       <Navbar />
 
-      <section className="pt-24 pb-8 bg-[#f4f1ea]">
-        <div className="container max-w-[1400px] mx-auto px-6">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-1.5 text-sm font-body text-muted-foreground hover:text-foreground transition-colors mb-4"
-          >
-            <ArrowLeft className="w-4 h-4" /> Back to home
-          </Link>
+      <main className="lk-sound-map relative min-h-[820px] overflow-hidden pt-20 lg:h-[calc(100vh-1rem)] lg:min-h-[720px]">
+        <div className="absolute inset-x-0 bottom-0 top-20">
+          {ready && (
+            <MapContainer center={habitat.center} zoom={habitat.zoom} minZoom={5} maxZoom={12} scrollWheelZoom zoomControl attributionControl className="h-full w-full">
+              <TileLayer attribution="&copy; OpenStreetMap contributors" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" maxZoom={19} />
+              <MapFocus habitat={habitat} />
+              <Circle center={habitat.center} radius={habitat.radius} pathOptions={{ color: "hsl(268, 78%, 66%)", fillColor: "hsl(268, 78%, 66%)", fillOpacity: 0.24, weight: 1.5, dashArray: "7 8" }} />
+              <Circle center={[habitat.center[0] + 0.5, habitat.center[1] - 0.35]} radius={habitat.radius * 0.52} pathOptions={{ color: "hsl(82, 90%, 60%)", fillColor: "hsl(82, 90%, 60%)", fillOpacity: 0.1, weight: 1 }} />
+              <Marker position={habitat.center} icon={habitatMarker}>
+                <Tooltip direction="top" offset={[0, -12]}>{activeBird.commonName} range focus</Tooltip>
+              </Marker>
+            </MapContainer>
+          )}
+        </div>
 
-          {/* Editorial map canvas */}
-          <div className="lk-editorial relative rounded-lg overflow-hidden border border-black/10 bg-[#f4f1ea] shadow-[0_20px_60px_-30px_rgba(0,0,0,0.35)] h-[68vh] min-h-[460px] max-h-[620px]">
-            {ready && (
-              <MapContainer
-                center={KENYA_CENTER}
-                zoom={6}
-                minZoom={5}
-                maxZoom={10}
-                scrollWheelZoom
-                zoomControl={true}
-                attributionControl={false}
-                maxBounds={KENYA_BOUNDS}
-                className="h-full w-full"
-              >
-                {/* Pale editorial base (CartoDB Positron) */}
-                <TileLayer
-                  attribution="&copy; OpenStreetMap contributors &copy; CARTO"
-                  url="https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png"
-                  maxZoom={19}
-                />
-                <TileLayer
-                  attribution=""
-                  url="https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png"
-                  maxZoom={19}
-                />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 top-20 z-[400] bg-[linear-gradient(90deg,hsl(var(--map-ink)/.97)_0%,hsl(var(--map-ink)/.76)_30%,transparent_58%),linear-gradient(0deg,hsl(var(--map-ink)/.98)_0%,transparent_46%)]" />
 
-                <MapController target={target} />
-
-                {visibleSamples.map((s) => {
-                  const b = birdMap.get(s.birdId)!;
-                  const st = CAT_STYLE[b.category];
-                  return (
-                    <Marker
-                      key={s.id}
-                      position={[s.lat, s.lon]}
-                      icon={dotIcon(st.color, s.abundance)}
-                    >
-                      <Popup minWidth={280} maxWidth={320}>
-                        <BirdPopup bird={b} />
-                      </Popup>
-                    </Marker>
-                  );
-                })}
-              </MapContainer>
-            )}
-
-            {/* Editorial title — top-left */}
-            <div className="absolute top-4 left-4 z-[400] max-w-[380px] pointer-events-none bg-white/90 backdrop-blur rounded-lg border border-black/10 shadow-sm px-4 py-3">
-              <h1 className="font-display font-bold text-foreground text-xl md:text-2xl leading-tight tracking-tight m-0">
-                Featured Birds of Kenya
-              </h1>
-              <p className="font-body text-foreground/75 text-xs md:text-sm mt-1 leading-snug">
-                Occurrence &amp; relative abundance across Kenya
-              </p>
-              <p className="font-body text-foreground/60 text-[10px] md:text-xs mt-0.5">
-                Samburu TEK · Xeno-canto recordings
-              </p>
+        <section className="pointer-events-none relative z-[500] mx-auto grid min-h-[740px] max-w-[1500px] grid-cols-1 px-5 pb-44 pt-8 md:px-8 lg:min-h-[calc(100vh-6rem)] lg:grid-cols-12 lg:gap-8 lg:px-12 lg:pb-40 lg:pt-10">
+          <div className="pointer-events-auto self-start lg:col-span-4 lg:self-center">
+            <div className="mb-5 flex items-center gap-3 text-[11px] font-semibold uppercase text-map-signal">
+              <span className="h-px w-8 bg-map-signal" /> Featured sound · {progress}
             </div>
+            <p className="mb-2 text-sm font-semibold uppercase text-map-signal">{activeBird.localName}</p>
+            <h1 className="max-w-xl font-display text-4xl font-bold leading-[1.03] text-map-foreground md:text-6xl lg:text-7xl">
+              {activeBird.commonName}
+            </h1>
+            <p className="mt-3 text-lg italic text-map-muted md:text-xl">{activeBird.scientificName}</p>
 
-            {/* Species filter panel — top-right */}
-            <div className="absolute top-4 right-4 z-[400] w-[290px] bg-white/92 backdrop-blur rounded-lg border border-black/10 shadow-md pointer-events-auto flex flex-col max-h-[58%]">
-              <div className="flex items-center justify-between px-4 pt-3 pb-2">
-                <div className="text-[11px] font-body font-semibold text-foreground/70 uppercase tracking-wider">
-                  Filter species
-                </div>
-                <button
-                  onClick={() => {
-                    setHiddenBirds(new Set());
-                    setActiveCats(
-                      new Set(["weather", "omen", "social", "predator", "endangered"]),
-                    );
-                  }}
-                  className="text-[10px] font-body text-foreground/60 hover:text-foreground underline"
-                >
-                  Reset
-                </button>
+            <div className="mt-7 grid max-w-md grid-cols-2 gap-5 border-y border-map-line py-5">
+              <div>
+                <p className="text-[10px] uppercase text-map-muted">Traditional signal</p>
+                <p className="mt-1 text-sm font-semibold text-map-foreground">{activeBird.prediction}</p>
               </div>
-              <div className="overflow-y-auto px-4 pb-3 space-y-3">
-                {grouped.map(({ cat, list }) => {
-                  const s = CAT_STYLE[cat];
-                  const catOn = activeCats.has(cat);
-                  return (
-                    <div key={cat}>
-                      <button
-                        onClick={() => toggleCat(cat)}
-                        className={`flex items-center gap-2 w-full text-left mb-1.5 transition-opacity ${
-                          catOn ? "opacity-100" : "opacity-40"
-                        }`}
-                      >
-                        <span
-                          className="w-2.5 h-2.5 rounded-full shrink-0"
-                          style={{ background: s.color }}
-                        />
-                        <span className="text-[10px] font-body font-semibold uppercase tracking-wider text-foreground/70">
-                          {s.label}
-                        </span>
-                      </button>
-                      <ul className="space-y-1.5 pl-1">
-                        {list.map((b) => {
-                          const on = catOn && !hiddenBirds.has(b.id);
-                          return (
-                            <li key={b.id} className="flex items-center gap-2">
-                              <input
-                                type="checkbox"
-                                checked={on}
-                                onChange={() => toggleBird(b.id)}
-                                disabled={!catOn}
-                                aria-label={`Toggle ${b.commonName}`}
-                                className="accent-[#4e8a3e] w-3 h-3 shrink-0"
-                              />
-                              {b.thumbnailUrl ? (
-                                <img
-                                  src={b.thumbnailUrl}
-                                  alt=""
-                                  className={`w-7 h-7 rounded object-cover shrink-0 ${
-                                    on ? "" : "grayscale opacity-50"
-                                  }`}
-                                />
-                              ) : (
-                                <span className="w-7 h-7 rounded bg-muted shrink-0" />
-                              )}
-                              <button
-                                onClick={() => flyToBird(b)}
-                                className={`text-left flex-1 min-w-0 hover:opacity-70 transition-opacity ${
-                                  on ? "" : "opacity-50"
-                                }`}
-                              >
-                                <div className="font-body font-semibold text-foreground text-[11px] leading-tight truncate">
-                                  {b.commonName}
-                                </div>
-                                <div className="text-[10px] font-body text-foreground/60 truncate">
-                                  {b.localName}
-                                </div>
-                              </button>
-                              {b.iucnStatus && (
-                                <span
-                                  className={`text-[9px] font-body font-bold px-1.5 py-0.5 rounded shrink-0 ${
-                                    b.iucnStatus === "CR"
-                                      ? "bg-red-600 text-white"
-                                      : b.iucnStatus === "EN"
-                                        ? "bg-orange-500 text-white"
-                                        : "bg-amber-400 text-black"
-                                  }`}
-                                >
-                                  {b.iucnStatus}
-                                </span>
-                              )}
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    </div>
-                  );
-                })}
+              <div>
+                <p className="text-[10px] uppercase text-map-muted">Conservation</p>
+                <p className="mt-1 text-sm font-semibold text-map-foreground">
+                  {activeBird.iucnStatus ? STATUS_LABEL[activeBird.iucnStatus] : "Not assessed here"}
+                </p>
               </div>
             </div>
 
-            {/* Species legend — bottom-right */}
-            <div className="absolute bottom-6 right-6 z-[400] w-[300px] bg-white/90 backdrop-blur rounded-lg border border-black/10 p-4 shadow-md">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <div className="text-[10px] font-body font-semibold text-foreground/60 uppercase tracking-wider mb-2">
-                    Species group
-                  </div>
-                  <ul className="space-y-1.5">
-                    {(Object.keys(CAT_STYLE) as SamburuBird["category"][]).map((c) => {
-                      const s = CAT_STYLE[c];
-                      const active = activeCats.has(c);
-                      return (
-                        <li key={c}>
-                          <button
-                            onClick={() => toggleCat(c)}
-                            className={`flex items-center gap-2 text-left w-full text-[11px] font-body transition-opacity ${
-                              active ? "opacity-100" : "opacity-30 hover:opacity-60"
-                            }`}
-                          >
-                            <span
-                              className="w-2.5 h-2.5 rounded-full shrink-0"
-                              style={{ background: s.color }}
-                            />
-                            <span className="text-foreground/80">{s.label}</span>
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-                <div>
-                  <div className="text-[10px] font-body font-semibold text-foreground/60 uppercase tracking-wider mb-2">
-                    Relative abundance
-                  </div>
-                  <div className="flex items-end gap-1.5 h-6">
-                    {[4, 6, 8, 11, 14].map((sz) => (
-                      <span
-                        key={sz}
-                        className="rounded-full bg-foreground/70"
-                        style={{ width: sz, height: sz }}
-                      />
-                    ))}
-                  </div>
-                  <div className="flex justify-between text-[9px] font-body text-foreground/50 mt-1">
-                    <span>Lower</span>
-                    <span>Higher</span>
-                  </div>
-                </div>
+            <div className="mt-6 max-w-md border-l-2 border-map-range pl-4">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase text-map-muted">
+                <MapPin className="h-4 w-4 text-map-range" /> Habitat &amp; range
               </div>
-              <div className="border-t border-black/10 mt-3 pt-2 text-[9px] font-body text-foreground/50 leading-relaxed">
-                Illustrative sample points across Kenyan biogeographic zones.
-              </div>
-            </div>
-
-            {/* Footer strip — bottom-left */}
-            <div className="absolute bottom-6 left-6 z-[400] text-[10px] font-body text-foreground/60">
-              Data: Samburu TEK · Xeno-canto · Wikipedia &nbsp;|&nbsp; Map: Lkotkote Project &nbsp;|&nbsp; {new Date().getFullYear()}
+              <p className="mt-2 text-base text-map-foreground">{habitat.label}</p>
+              <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-map-muted">{activeBird.story}</p>
             </div>
           </div>
 
-          <p className="text-xs font-body text-muted-foreground mt-4 text-center max-w-2xl mx-auto leading-relaxed">
-            Click any dot to hear the bird, read its Samburu meaning, and see the sound-graph of its
-            call. Toggle species groups in the legend to filter the map.
-          </p>
-        </div>
-      </section>
+          <div className="pointer-events-auto mt-6 flex items-end justify-center lg:col-span-5 lg:mt-0">
+            <div className="relative h-52 w-full max-w-xl overflow-hidden border border-map-line bg-map-panel/70 shadow-2xl md:h-72 lg:h-[500px]">
+              {activeBird.thumbnailUrl ? (
+                <img key={activeBird.id} src={activeBird.thumbnailUrl} alt={activeBird.commonName} className="h-full w-full object-cover transition-opacity duration-500" />
+              ) : (
+                <div className="grid h-full place-items-center text-map-muted"><Bird className="h-20 w-20" /></div>
+              )}
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-map-ink via-map-ink/50 to-transparent p-5 pt-16">
+                <p className="text-[10px] font-semibold uppercase text-map-signal">{categoryLabel[activeBird.category]}</p>
+                <p className="mt-1 text-sm text-map-foreground">Range overlay is illustrative</p>
+              </div>
+            </div>
+          </div>
 
+          <aside className="pointer-events-auto mt-6 self-center lg:col-span-3 lg:mt-0 lg:justify-self-end">
+            <div className="relative w-full lg:w-64">
+              <Button variant="outline" onClick={() => setShowSpecies((value) => !value)} className="w-full justify-between border-map-line bg-map-panel/90 text-map-foreground hover:bg-map-line hover:text-map-foreground">
+                All featured birds <ChevronDown className={`h-4 w-4 transition-transform ${showSpecies ? "rotate-180" : ""}`} />
+              </Button>
+              {showSpecies && (
+                <div className="absolute right-0 top-12 z-[700] max-h-72 w-full overflow-y-auto border border-map-line bg-map-panel/95 p-1 shadow-2xl backdrop-blur-xl">
+                  {birds.map((bird, index) => (
+                    <Button key={bird.id} variant="ghost" onClick={() => goTo(index)} className={`h-auto w-full justify-start whitespace-normal px-3 py-2 text-left text-xs hover:bg-map-line hover:text-map-foreground ${index === activeIndex ? "bg-map-line text-map-signal" : "text-map-muted"}`}>
+                      <span className="truncate">{bird.localName} · {bird.commonName}</span>
+                    </Button>
+                  ))}
+                </div>
+              )}
+              <div className="mt-8 hidden lg:block">
+                <p className="text-right text-[10px] uppercase text-map-muted">Current range focus</p>
+                <p className="mt-2 text-right text-sm text-map-foreground">Northern Kenya</p>
+                <div className="mt-3 ml-auto h-1 w-36 bg-map-line"><div className="h-full bg-map-signal" style={{ width: `${((activeIndex + 1) / birds.length) * 100}%` }} /></div>
+              </div>
+            </div>
+          </aside>
+        </section>
+
+        <div className="absolute inset-x-0 bottom-0 z-[600] border-t border-map-line bg-map-ink/95 px-5 py-4 backdrop-blur-xl md:px-8 lg:px-12 lg:py-5">
+          <div className="mx-auto flex max-w-[1500px] flex-col gap-4 md:flex-row md:items-center">
+            <div className="flex items-center gap-2">
+              <Button size="icon" variant="ghost" onClick={() => goTo(activeIndex - 1)} className="text-map-muted hover:bg-map-line hover:text-map-foreground" aria-label="Previous featured bird"><ArrowLeft className="h-5 w-5" /></Button>
+              <span className="min-w-14 text-center text-xs text-map-muted">{progress}</span>
+            </div>
+            <div className="min-w-0 flex-1">
+              {audioSrc ? (
+                <BirdSoundPlayer key={activeBird.id} src={audioSrc} credit={activeBird.audioCredit ?? activeBird.recordist} immersive />
+              ) : (
+                <div className="flex h-20 items-center justify-center gap-2 text-sm text-map-muted"><Volume2 className="h-4 w-4" /> Recording not yet available</div>
+              )}
+            </div>
+            <Button onClick={() => goTo(activeIndex + 1)} className="h-12 shrink-0 bg-map-signal px-5 text-map-ink hover:bg-map-signal/90">
+              Scroll next <ArrowRight className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+      </main>
       <Footer />
     </div>
   );

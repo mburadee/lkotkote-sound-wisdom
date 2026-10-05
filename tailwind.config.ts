@@ -14,8 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["'Playfair Display'", "serif"],
-        body: ["'Source Sans 3'", "sans-serif"],
+        display: ["-apple-system", "BlinkMacSystemFont", "'SF Pro Display'", "'Segoe UI'", "sans-serif"],
+        body: ["Inter", "-apple-system", "BlinkMacSystemFont", "'Segoe UI'", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -65,6 +65,15 @@ export default {
         sand: {
           DEFAULT: "hsl(var(--sand))",
           light: "hsl(var(--sand-light))",
+        },
+        map: {
+          ink: "hsl(var(--map-ink))",
+          panel: "hsl(var(--map-panel))",
+          foreground: "hsl(var(--map-foreground))",
+          muted: "hsl(var(--map-muted))",
+          signal: "hsl(var(--map-signal))",
+          range: "hsl(var(--map-range))",
+          line: "hsl(var(--map-line))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
