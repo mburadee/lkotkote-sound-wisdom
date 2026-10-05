@@ -115,7 +115,9 @@ const FeaturedSoundsMap = () => {
       SAMBURU_BIRDS.map(async (bird) => {
         const [thumbnailUrl, audio] = await Promise.all([
           fetchWikiThumb(bird.commonName),
-          bird.localAudio ? Promise.resolve({}) : fetchXenoCanto(bird.scientificName),
+          bird.localAudio
+            ? Promise.resolve<{ url?: string; recordist?: string }>({})
+            : fetchXenoCanto(bird.scientificName),
         ]);
         return { ...bird, thumbnailUrl, audioUrl: audio.url, recordist: audio.recordist };
       }),
