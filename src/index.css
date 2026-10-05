@@ -1,13 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Source+Sans+3:wght@300;400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --font-display: 'Playfair Display', serif;
-    --font-body: 'Source Sans 3', sans-serif;
+    --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+    --font-body: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
     --background: 38 40% 97%;
     --foreground: 25 30% 12%;
@@ -47,6 +45,15 @@
     --sand: 38 35% 88%;
     --sand-light: 38 40% 95%;
     --sky-warm: 25 60% 70%;
+
+    --map-ink: 140 17% 5%;
+    --map-panel: 144 18% 8%;
+    --map-foreground: 42 30% 93%;
+    --map-muted: 140 7% 64%;
+    --map-signal: 82 90% 60%;
+    --map-range: 268 78% 66%;
+    --map-line: 140 12% 24%;
+    --shadow-signal: 0 0 32px hsl(var(--map-signal) / 0.3);
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -88,5 +95,8 @@
   }
   .shadow-card {
     box-shadow: 0 4px 20px -4px hsl(var(--earth-brown) / 0.1);
+  }
+  .shadow-signal {
+    box-shadow: var(--shadow-signal);
   }
 }

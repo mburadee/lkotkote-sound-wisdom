@@ -5,9 +5,10 @@ import WaveSurfer from "wavesurfer.js";
 interface Props {
   src: string;
   credit?: string;
+  immersive?: boolean;
 }
 
-const BirdSoundPlayer = ({ src, credit }: Props) => {
+const BirdSoundPlayer = ({ src, credit, immersive = false }: Props) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WaveSurfer | null>(null);
   const [ready, setReady] = useState(false);
@@ -19,13 +20,13 @@ const BirdSoundPlayer = ({ src, credit }: Props) => {
     if (!containerRef.current) return;
     const ws = WaveSurfer.create({
       container: containerRef.current,
-      waveColor: "hsl(35, 25%, 65%)",
-      progressColor: "hsl(105, 38%, 39%)",
-      cursorColor: "hsl(30, 75%, 45%)",
-      barWidth: 2,
-      barGap: 1,
-      barRadius: 2,
-      height: 56,
+      waveColor: immersive ? "hsl(145, 12%, 38%)" : "hsl(35, 25%, 65%)",
+      progressColor: immersive ? "hsl(82, 90%, 60%)" : "hsl(105, 38%, 39%)",
+      cursorColor: immersive ? "hsl(82, 90%, 60%)" : "hsl(30, 75%, 45%)",
+      barWidth: immersive ? 3 : 2,
+      barGap: immersive ? 2 : 1,
+      barRadius: 3,
+      height: immersive ? 78 : 56,
       normalize: true,
     });
     ws.on("ready", () => {
@@ -49,6 +50,36 @@ const BirdSoundPlayer = ({ src, credit }: Props) => {
     const s = Math.floor(t % 60);
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
+
+  if (immersive) {
+    return (
+      <div className="w-full">
+        <div className="flex items-center gap-4 md:gap-6">
+          <button
+            onClick={() => wsRef.current?.playPause()}
+            disabled={!ready}
+            className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-map-signal text-map-ink shadow-signal transition-transform hover:scale-105 disabled:opacity-50"
+            aria-label={playing ? "Pause bird sound" : "Play bird sound"}
+          >
+            {!ready ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : playing ? (
+              <Pause className="h-5 w-5" />
+            ) : (
+              <Play className="ml-0.5 h-5 w-5" />
+            )}
+          </button>
+          <div className="min-w-0 flex-1">
+            <div ref={containerRef} className="min-h-[78px] overflow-hidden" />
+            <div className="mt-1 flex items-center justify-between gap-3 font-body text-[10px] uppercase text-map-muted">
+              <span className="tabular-nums">{fmt(current)} / {fmt(duration)}</span>
+              {credit && <span className="truncate">Recording: {credit}</span>}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-lg bg-muted/60 p-3 border border-border">
