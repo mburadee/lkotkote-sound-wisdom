@@ -46,13 +46,13 @@
     --sand-light: 38 40% 95%;
     --sky-warm: 25 60% 70%;
 
-    --map-ink: 140 17% 5%;
-    --map-panel: 144 18% 8%;
-    --map-foreground: 42 30% 93%;
-    --map-muted: 140 7% 64%;
-    --map-signal: 82 90% 60%;
-    --map-range: 268 78% 66%;
-    --map-line: 140 12% 24%;
+    --map-ink: var(--background);
+    --map-panel: var(--card);
+    --map-foreground: var(--foreground);
+    --map-muted: var(--muted-foreground);
+    --map-signal: var(--forest-green);
+    --map-range: var(--secondary);
+    --map-line: var(--border);
     --shadow-signal: 0 0 32px hsl(var(--map-signal) / 0.3);
 
     --sidebar-background: 0 0% 98%;
