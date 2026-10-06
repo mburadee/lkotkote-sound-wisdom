@@ -121,7 +121,7 @@ const FeaturedSoundsMap = () => {
 // Locally stored asset pointers preserve photographer attribution and edited cut-outs.
 const portraitModules = import.meta.glob<{ default: { url: string; author: string; source: string; license: string } }>("../assets/bird-portraits/*.asset.json", { eager: true });
 function SpeciesPortrait({ name, commonName }: { name: string; commonName: string }) {
-  const key = `../assets/bird-portraits/${name.toLowerCase().replaceAll(" ", "_")}.asset.json`;
+  const key = `../assets/bird-portraits/${name.toLowerCase().replace(/ /g, "_")}.asset.json`;
   const portrait = portraitModules[key]?.default;
   return portrait ? <figure className="flex h-full w-full flex-col items-center justify-center"><img src={portrait.url} alt={commonName} className="min-h-0 w-full flex-1 object-contain" /><figcaption className="mt-2 text-center text-[10px] text-muted-foreground"><a href={portrait.source} target="_blank" rel="noopener noreferrer" className="underline">{portrait.author} · {portrait.license} · background removed</a></figcaption></figure> : <Bird className="h-20 w-20 text-forest" aria-label="Bird portrait unavailable" />;
 }
