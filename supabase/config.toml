@@ -2,3 +2,6 @@ project_id = "owdrikejsrkwyembntdp"
 
 [functions.birdnet-analyze]
 verify_jwt = false
+
+[functions.occurrence-qa]
+verify_jwt = false
