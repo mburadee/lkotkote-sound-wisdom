@@ -51,7 +51,7 @@
     --map-foreground: var(--foreground);
     --map-muted: var(--muted-foreground);
     --map-signal: var(--forest-green);
-    --map-range: var(--secondary);
+    --map-range: 24 100% 50%;
     --map-line: var(--border);
     --shadow-signal: 0 0 32px hsl(var(--map-signal) / 0.3);
 

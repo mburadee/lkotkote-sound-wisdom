@@ -96,12 +96,12 @@ const FeaturedSoundsMap = () => {
               <MapContainer center={[0, 25]} zoom={3} minZoom={2} maxZoom={18} scrollWheelZoom zoomControl className="h-full w-full">
                 <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" maxZoom={19} />
                 <MapView birdId={bird.id} world={world} reset={reset} />
-                {taxon && showRecords && <TileLayer key={taxon.key} url={occurrenceTileUrl(taxon.key)} attribution='<a href="https://www.gbif.org">GBIF.org</a> occurrences' opacity={0.85} maxNativeZoom={14} maxZoom={18} eventHandlers={{ tileerror: () => setTileError(true) }} />}
+                {taxon && showRecords && <TileLayer key={taxon.key} url={occurrenceTileUrl(taxon.key)} attribution='<a href="https://www.gbif.org">GBIF.org</a> occurrences' opacity={1} maxNativeZoom={14} maxZoom={18} eventHandlers={{ tileerror: () => setTileError(true) }} />}
               </MapContainer>
               {(isLoading || isError || tileError) && <div className="absolute bottom-7 left-3 right-3 z-[500] rounded border border-border bg-background/95 p-3 text-xs shadow-card">{isLoading ? "Loading verified species records…" : "Occurrence source unavailable. Please try again shortly."}</div>}
             </div>
             <div className="mt-3 flex flex-wrap justify-between gap-2 text-xs text-muted-foreground">
-              <p className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-forest" /> Recorded presence{count !== undefined ? ` · ${count.toLocaleString()} georeferenced records` : ""}</p>
+              <p className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-map-range" /> Recorded presence{count !== undefined ? ` · ${count.toLocaleString()} georeferenced records` : ""}</p>
               <a className="inline-flex items-center gap-1 text-forest underline underline-offset-4" href={taxon ? `https://www.gbif.org/occurrence/search?taxon_key=${taxon.key}&has_coordinate=true` : "https://www.gbif.org"} target="_blank" rel="noopener noreferrer">GBIF source <ExternalLink className="h-3 w-3" /></a>
             </div>
             <p className="mt-2 text-xs leading-relaxed text-muted-foreground">Observed locations, not complete habitat boundaries. Coverage varies; historical, captive, and uncertain records may be included.</p>
@@ -118,11 +118,14 @@ const FeaturedSoundsMap = () => {
   );
 };
 
-// Locally stored asset pointers preserve photographer attribution and edited cut-outs.
+// Original photographs keep their backgrounds; existing source metadata preserves credits.
 const portraitModules = import.meta.glob<{ default: { url: string; author: string; source: string; license: string } }>("../assets/bird-portraits/*.asset.json", { eager: true });
+const photoModules = import.meta.glob<{ default: { url: string } }>("../assets/bird-photos/*.asset.json", { eager: true });
 function SpeciesPortrait({ name, commonName }: { name: string; commonName: string }) {
-  const key = `../assets/bird-portraits/${name.toLowerCase().replace(/ /g, "_")}.asset.json`;
+  const filename = name.toLowerCase().replace(/ /g, "_");
+  const key = `../assets/bird-portraits/${filename}.asset.json`;
   const portrait = portraitModules[key]?.default;
-  return portrait ? <figure className="flex h-full w-full flex-col items-center justify-center"><img src={portrait.url} alt={commonName} className="min-h-0 w-full flex-1 object-contain" /><figcaption className="mt-2 text-center text-[10px] text-muted-foreground"><a href={portrait.source} target="_blank" rel="noopener noreferrer" className="underline">{portrait.author} · {portrait.license} · background removed</a></figcaption></figure> : <Bird className="h-20 w-20 text-forest" aria-label="Bird portrait unavailable" />;
+  const photo = photoModules[`../assets/bird-photos/${filename}.asset.json`]?.default;
+  return photo && portrait ? <figure className="flex h-full w-full flex-col items-center justify-center"><img src={photo.url} alt={commonName} className="min-h-0 w-full flex-1 rounded-md object-contain" /><figcaption className="mt-2 text-center text-[10px] text-muted-foreground"><a href={portrait.source} target="_blank" rel="noopener noreferrer" className="underline">{portrait.author.replace(/&amp;/g, "&")} · {portrait.license}</a></figcaption></figure> : <Bird className="h-20 w-20 text-forest" aria-label="Bird portrait unavailable" />;
 }
 export default FeaturedSoundsMap;
