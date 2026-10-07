@@ -39,14 +39,16 @@ const FeaturedSoundsMap = () => {
       return { key, name: match.acceptedScientificName ?? match.scientificName };
     }, staleTime: 86400000, retry: 1,
   });
-  const { data: count } = useQuery({
-    queryKey: ["gbif-count", taxon?.key], enabled: Boolean(taxon?.key),
+  const { data: occ } = useQuery({
+    queryKey: ["gbif-occurrences", taxon?.key], enabled: Boolean(taxon?.key),
     queryFn: async () => {
-      const response = await fetch(`https://api.gbif.org/v1/occurrence/search?taxonKey=${taxon?.key}&hasCoordinate=true&hasGeospatialIssue=false&limit=0`);
+      const response = await fetch(`https://api.gbif.org/v1/occurrence/search?taxonKey=${taxon?.key}&hasCoordinate=true&hasGeospatialIssue=false&limit=300`);
       if (!response.ok) return undefined;
-      return (await response.json()).count as number;
+      const body = await response.json();
+      return { count: body.count as number, points: toOccurrencePoints(body.results ?? []) };
     }, staleTime: 86400000,
   });
+  const count = occ?.count;
   useEffect(() => { setTileError(false); setWorld(false); }, [activeIndex]);
   const navigate = (index: number) => setActiveIndex((index + SAMBURU_BIRDS.length) % SAMBURU_BIRDS.length);
   return (
@@ -97,6 +99,18 @@ const FeaturedSoundsMap = () => {
                 <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" maxZoom={19} />
                 <MapView birdId={bird.id} world={world} reset={reset} />
                 {taxon && showRecords && <TileLayer key={taxon.key} url={occurrenceTileUrl(taxon.key)} attribution='<a href="https://www.gbif.org">GBIF.org</a> occurrences' opacity={1} maxNativeZoom={14} maxZoom={18} eventHandlers={{ tileerror: () => setTileError(true) }} />}
+                {showRecords && occ?.points.map((p) => (
+                  <CircleMarker key={p.key} center={[p.lat, p.lng]} radius={5} pathOptions={{ color: "hsl(var(--background))", weight: 1, fillColor: "hsl(var(--map-range))", fillOpacity: 0.95 }}>
+                    <Popup>
+                      <div className="min-w-[200px] space-y-1 text-xs">
+                        <p><strong>Date:</strong> {p.date}</p>
+                        <p><strong>Location:</strong> {p.location}<br /><span className="text-muted-foreground">{p.lat.toFixed(3)}, {p.lng.toFixed(3)}</span></p>
+                        <p><strong>Source:</strong> {p.source}</p>
+                        <a href={p.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-semibold text-forest underline">View GBIF record {p.key} <ExternalLink className="h-3 w-3" /></a>
+                      </div>
+                    </Popup>
+                  </CircleMarker>
+                ))}
               </MapContainer>
               {(isLoading || isError || tileError) && <div className="absolute bottom-7 left-3 right-3 z-[500] rounded border border-border bg-background/95 p-3 text-xs shadow-card">{isLoading ? "Loading verified species records…" : "Occurrence source unavailable. Please try again shortly."}</div>}
             </div>
@@ -112,6 +126,7 @@ const FeaturedSoundsMap = () => {
           <div className="min-w-0 flex-1">{bird.localAudio ? <BirdSoundPlayer key={bird.id} src={bird.localAudio} credit={bird.audioCredit} immersive /> : <div className="flex h-24 items-center justify-center gap-2 text-sm text-muted-foreground"><Volume2 className="h-4 w-4" /> Recording not yet available</div>}</div>
           <Button onClick={() => navigate(activeIndex + 1)} className="bg-forest text-secondary-foreground hover:bg-forest/90">Scroll next <ArrowRight /></Button>
         </section>
+        <OccurrenceQA key={taxon?.key ?? bird.id} taxonKey={taxon?.key} speciesName={`${bird.commonName} (${bird.scientificName})`} localName={bird.localName} />
       </main>
       <Footer />
     </div>
