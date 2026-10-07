@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Helmet } from "react-helmet-async";
-import { MapContainer, TileLayer, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, useMap, CircleMarker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { ArrowLeft, ArrowRight, Bird, Globe2, MapPin, RotateCcw, Volume2, ExternalLink } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BirdSoundPlayer from "@/components/BirdSoundPlayer";
+import OccurrenceQA from "@/components/OccurrenceQA";
 import { Button } from "@/components/ui/button";
 import { SAMBURU_BIRDS } from "@/data/samburuTek";
-import { acceptedTaxonKey, occurrenceTileUrl } from "@/lib/species-occurrences";
+import { acceptedTaxonKey, occurrenceTileUrl, toOccurrencePoints } from "@/lib/species-occurrences";
 
 function MapView({ birdId, world, reset }: { birdId: number; world: boolean; reset: number }) {
   const map = useMap();
