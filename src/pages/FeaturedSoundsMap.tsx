@@ -7,6 +7,8 @@ import { ArrowLeft, ArrowRight, Bird, Globe2, MapPin, RotateCcw, Volume2, Extern
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BirdSoundPlayer from "@/components/BirdSoundPlayer";
+import FeaturedBirdPhoto from "@/components/FeaturedBirdPhoto";
+import { featuredBirdPhoto } from "@/lib/featured-bird-photos";
 import OccurrenceQA from "@/components/OccurrenceQA";
 import { Button } from "@/components/ui/button";
 import { SAMBURU_BIRDS } from "@/data/samburuTek";
@@ -134,14 +136,11 @@ const FeaturedSoundsMap = () => {
   );
 };
 
-// Original photographs keep their backgrounds; existing source metadata preserves credits.
-const portraitModules = import.meta.glob<{ default: { url: string; author: string; source: string; license: string } }>("../assets/bird-portraits/*.asset.json", { eager: true });
-const photoModules = import.meta.glob<{ default: { url: string } }>("../assets/bird-photos/*.asset.json", { eager: true });
 function SpeciesPortrait({ name, commonName }: { name: string; commonName: string }) {
-  const filename = name.toLowerCase().replace(/ /g, "_");
-  const key = `../assets/bird-portraits/${filename}.asset.json`;
-  const portrait = portraitModules[key]?.default;
-  const photo = photoModules[`../assets/bird-photos/${filename}.asset.json`]?.default;
-  return photo && portrait ? <figure className="flex h-full w-full flex-col items-center justify-center"><img src={photo.url} alt={commonName} className="min-h-0 w-full flex-1 rounded-md object-contain" /><figcaption className="mt-2 text-center text-[10px] text-muted-foreground"><a href={portrait.source} target="_blank" rel="noopener noreferrer" className="underline">{portrait.author.replace(/&amp;/g, "&")} · {portrait.license}</a></figcaption></figure> : <Bird className="h-20 w-20 text-forest" aria-label="Bird portrait unavailable" />;
+  const photo = featuredBirdPhoto(name);
+  return <figure className="flex h-full w-full flex-col items-center justify-center">
+    <FeaturedBirdPhoto scientificName={name} alt={commonName} loading="eager" className="min-h-0 w-full flex-1 rounded-md object-contain" />
+    {photo && <figcaption className="mt-2 text-center text-[10px] text-muted-foreground"><a href={photo.source} target="_blank" rel="noopener noreferrer" className="underline">Wikipedia · Photo credits & license</a></figcaption>}
+  </figure>;
 }
 export default FeaturedSoundsMap;
