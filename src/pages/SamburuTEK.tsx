@@ -6,10 +6,11 @@ import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BirdSoundPlayer from "@/components/BirdSoundPlayer";
+import FeaturedBirdPhoto from "@/components/FeaturedBirdPhoto";
 import { Card, CardContent } from "@/components/ui/card";
 import { SAMBURU_BIRDS, type SamburuBird } from "@/data/samburuTek";
 
-type Enriched = SamburuBird & { thumbnailUrl?: string; audioUrl?: string; recordist?: string };
+type Enriched = SamburuBird & { audioUrl?: string; recordist?: string };
 
 const CATEGORY_META: Record<
   SamburuBird["category"],
@@ -22,17 +23,6 @@ const CATEGORY_META: Record<
   endangered: { label: "Critically Endangered", icon: AlertTriangle, className: "bg-red-500/15 text-red-600 border-red-500/40" },
 };
 
-
-async function fetchWikiThumb(name: string): Promise<string | undefined> {
-  try {
-    const r = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(name)}`);
-    if (!r.ok) return;
-    const d = await r.json();
-    return d.thumbnail?.source ?? d.originalimage?.source;
-  } catch {
-    return;
-  }
-}
 
 async function fetchXenoCanto(scientific: string): Promise<{ url?: string; recordist?: string }> {
   try {
@@ -63,20 +53,12 @@ const BirdCard = ({ bird, index }: { bird: Enriched; index: number }) => {
       <Card className="overflow-hidden h-full border-border hover:shadow-warm transition-shadow bg-card">
         <div className="flex gap-4 p-4">
           <div className="relative shrink-0">
-            {bird.thumbnailUrl ? (
-              <img
-                src={bird.thumbnailUrl}
-                alt={`${bird.commonName} (${bird.localName})`}
-                className="w-20 h-20 rounded-full object-cover ring-2 ring-savanna-gold/40"
-                loading="lazy"
-                width={80}
-                height={80}
-              />
-            ) : (
-              <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center ring-2 ring-border">
-                <Bird className="w-8 h-8 text-muted-foreground" />
-              </div>
-            )}
+            <FeaturedBirdPhoto
+              scientificName={bird.scientificName}
+              alt={`${bird.commonName} (${bird.localName})`}
+              className="w-20 h-20 rounded-full object-cover ring-2 ring-savanna-gold/40"
+              loading="lazy" width={80} height={80}
+            />
             <span
               className={`absolute -bottom-1 -right-1 inline-flex items-center justify-center w-7 h-7 rounded-full border ${meta.className}`}
               title={meta.label}
@@ -137,11 +119,8 @@ const SamburuTEK = () => {
     (async () => {
       const enriched = await Promise.all(
         SAMBURU_BIRDS.map(async (b) => {
-          const [thumb, audio] = await Promise.all([
-            fetchWikiThumb(b.commonName),
-            fetchXenoCanto(b.scientificName),
-          ]);
-          return { ...b, thumbnailUrl: thumb, audioUrl: audio.url, recordist: audio.recordist };
+          const audio = await fetchXenoCanto(b.scientificName);
+          return { ...b, audioUrl: audio.url, recordist: audio.recordist };
         }),
       );
       if (!cancelled) setBirds(enriched);
